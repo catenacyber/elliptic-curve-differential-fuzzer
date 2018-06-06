@@ -11,5 +11,5 @@ add_definitions(-D	WITH_STDLIB)
 find_library(MBEDCRYPTO_LIB mbedcrypto)
 find_library(LIBECC_LIB ec)
 
-add_executable (ecfuzzer main.c fuzz_ec.c mbedtls.c libecc.c)
+add_executable (ecfuzzer main.c fuzz_ec.c modules/mbedtls.c modules/libecc.c)
 target_link_libraries (ecfuzzer "${MBEDCRYPTO_LIB}" "${LIBECC_LIB}")

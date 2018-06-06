@@ -94,17 +94,17 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
     for (i=0; i<NBMODULES; i++) {
         modules[i].process(&input, &output[i]);
         if (output[i].errorCode == FUZZEC_ERROR_NONE) {
-            for (j=0; j<i; j++) {
-                if (output[j].errorCode != FUZZEC_ERROR_NONE) {
+            if (i > 0) {
+                if (output[i-1].errorCode != FUZZEC_ERROR_NONE) {
                     continue;
                 }
                 for (k=0; k<FUZZEC_NBPOINTS; k++) {
-                    if (output[i].pointSizes[k] != output[j].pointSizes[k]) {
-                        printf("Module %s and %s returned different lengths for test %zu : %zu vs %zu\n", modules[i].name, modules[j].name, k, output[i].pointSizes[k], output[j].pointSizes[k]);
+                    if (output[i].pointSizes[k] != output[i-1].pointSizes[k]) {
+                        printf("Module %s and %s returned different lengths for test %zu : %zu vs %zu\n", modules[i].name, modules[i-1].name, k, output[i].pointSizes[k], output[i-1].pointSizes[k]);
                         abort();
                     }
-                    if (memcmp(output[i].points[k], output[j].points[k], output[i].pointSizes[k]) != 0) {
-                        printf("Module %s and %s returned different points for test %zu\n", modules[i].name, modules[j].name, k);
+                    if (memcmp(output[i].points[k], output[i-1].points[k], output[i].pointSizes[k]) != 0) {
+                        printf("Module %s and %s returned different points for test %zu\n", modules[i].name, modules[i-1].name, k);
                         abort();
                     }
                 }

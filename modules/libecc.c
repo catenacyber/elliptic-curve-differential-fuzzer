@@ -2,7 +2,7 @@
 // Author Philippe Antoine <p.antoine@catenacyber.fr>
 
 
-#include "fuzz_ec.h"
+#include "../fuzz_ec.h"
 #include <libec.h>
 
 ec_curve_type eccurvetypeFromTlsId(uint16_t tlsid) {
@@ -54,6 +54,7 @@ void fuzzec_libecc_process(fuzzec_input_t * input, fuzzec_output_t * output) {
     }
     //elliptic curve computations
     prj_pt_mul(&pointZ1, &scalar1, &(curve_params.ec_gen));
+    //TODO test consistency with prj_pt_mul_monty
     if (prj_pt_iszero(&pointZ1)) {
         //null point is zero
         output->pointSizes[0] = 1;

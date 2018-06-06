@@ -2,7 +2,7 @@
 // Author Philippe Antoine <p.antoine@catenacyber.fr>
 
 
-#include "fuzz_ec.h"
+#include "../fuzz_ec.h"
 #include <mbedtls/ecp.h>
 
 void fuzzec_mbedtls_process(fuzzec_input_t * input, fuzzec_output_t * output) {
