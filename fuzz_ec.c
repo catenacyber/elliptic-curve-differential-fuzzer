@@ -48,11 +48,12 @@ size_t bitlenFromTlsId(uint16_t tlsid) {
     return 0;
 }
 
-#define NBMODULES 3
+#define NBMODULES 4
 //TODO integrate more modules
 void fuzzec_mbedtls_process(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_libecc_process(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_libecc_montgomery_process(fuzzec_input_t * input, fuzzec_output_t * output);
+void fuzzec_openssl_process(fuzzec_input_t * input, fuzzec_output_t * output);
 fuzzec_module_t modules[NBMODULES] = {
     {
         "mbedtls",
@@ -65,6 +66,10 @@ fuzzec_module_t modules[NBMODULES] = {
     {
         "libecc_montgomery",
         fuzzec_libecc_montgomery_process,
+    },
+    {
+        "openssl",
+        fuzzec_openssl_process,
     },
 };
 

@@ -49,6 +49,7 @@ void fuzzec_mbedtls_process(fuzzec_input_t * input, fuzzec_output_t * output) {
             goto end;
         }
     }
+    //P2=scalar2*P1 (=scalar2*scalar1*G)
     if (mbedtls_mpi_cmp_int(&scalar2, 0) == 0 || mbedtls_ecp_is_zero(&point1)) {
         mbedtls_ecp_set_zero(&point2);
     }
@@ -58,7 +59,6 @@ void fuzzec_mbedtls_process(fuzzec_input_t * input, fuzzec_output_t * output) {
             goto end;
         }
     }
-    //P2=scalar2*P1 (=scalar2*scalar1*G)
 
     //format output
     if (mbedtls_ecp_point_write_binary(&group, &point1, MBEDTLS_ECP_PF_UNCOMPRESSED, &output->pointSizes[0], output->points[0], FUZZEC_MAXPOINTLEN) != 0 ) {
