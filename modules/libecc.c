@@ -48,7 +48,7 @@ static void libecc_to_ecfuzzer(prj_pt *pointZ, fuzzec_output_t * output, size_t 
     aff_pt_uninit(&point);
 }
 
-void fuzzec_libecc_process(fuzzec_input_t * input, fuzzec_output_t * output) {
+void fuzzec_libecc_process_aux(fuzzec_input_t * input, fuzzec_output_t * output, void (*multiplyFunction)(prj_pt_t, nn_src_t, prj_pt_src_t)) {
     const ec_str_params *the_curve_const_parameters;
     ec_params curve_params;
     nn scalar1;
@@ -75,17 +75,15 @@ void fuzzec_libecc_process(fuzzec_input_t * input, fuzzec_output_t * output) {
         //multiplication by 0 is not allowed
         prj_pt_zero(&pointZ1);
     } else {
-        prj_pt_mul(&pointZ1, &scalar1, &(curve_params.ec_gen));
+        multiplyFunction(&pointZ1, &scalar1, &(curve_params.ec_gen));
     }
     //P2=scalar2*P1 (=scalar2*scalar1*G)
     if (nn_iszero(&scalar2) || prj_pt_iszero(&pointZ1)) {
         //multiplication by 0 is not allowed
         prj_pt_zero(&pointZ2);
     } else {
-        prj_pt_mul(&pointZ2, &scalar2, &pointZ1);
+        multiplyFunction(&pointZ2, &scalar2, &pointZ1);
     }
-
-    //TODO test consistency with prj_pt_mul_monty
 
     //format output
     byteLen = BYTECEIL(curve_params.ec_fp.p_bitlen);
@@ -109,4 +107,12 @@ end:
     nn_uninit(&scalar1);
     nn_uninit(&scalar2);
     return;
+}
+
+void fuzzec_libecc_montgomery_process(fuzzec_input_t * input, fuzzec_output_t * output) {
+    fuzzec_libecc_process_aux(input, output, prj_pt_mul_monty);
+}
+
+void fuzzec_libecc_process(fuzzec_input_t * input, fuzzec_output_t * output) {
+    fuzzec_libecc_process_aux(input, output, prj_pt_mul);
 }
