@@ -34,5 +34,6 @@ The input buffer must be at least 4 bytes :
 For each module, the fuzzer will :
 - load the curve (if the module does not know the curve, it is ok)
 - do a scalar multiplication of first big integer with curve generator
+- do a second scalar multiplication of second big integer with point resulting from first multiplication
 - check the return code (abort on failure)
 - check the result (point coordinates) with the previous module (abort on first difference)

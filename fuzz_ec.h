@@ -16,12 +16,10 @@ typedef struct _fuzzec_input_t {
     size_t bignum2Size;
 } fuzzec_input_t;
 
-/* TODO more operations
-    k2*G
-    k1*(k2*G)
-    (k2*G)+(k1*G)
+/* TODO? more operations
+    k2*G and (k2*G)+(k1*G) ?
  */
-#define FUZZEC_NBPOINTS 1
+#define FUZZEC_NBPOINTS 2
 #define FUZZEC_MAXPOINTLEN 0x1000
 
 typedef enum
