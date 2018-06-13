@@ -12,6 +12,7 @@ void fuzzec_mbedtls_process(fuzzec_input_t * input, fuzzec_output_t * output) {
     mbedtls_mpi scalar2;
     mbedtls_ecp_point point1;
     mbedtls_ecp_point point2;
+    int r;
 
     mbedtls_ecp_group_init(&group);
     mbedtls_mpi_init(&scalar1);
@@ -44,7 +45,13 @@ void fuzzec_mbedtls_process(fuzzec_input_t * input, fuzzec_output_t * output) {
         mbedtls_ecp_set_zero(&point1);
     }
     else {
-        if (mbedtls_ecp_mul(&group, &point1, &scalar1, &group.G, NULL, NULL) != 0) {
+        r = mbedtls_ecp_mul(&group, &point1, &scalar1, &group.G, NULL, NULL);
+        if (r == MBEDTLS_ERR_ECP_INVALID_KEY) {
+            //mbedtls enforces the scalar to be lesser than curve order
+            output->errorCode = FUZZEC_ERROR_UNSUPPORTED;
+            goto end;
+        }
+        else if (r != 0) {
             output->errorCode = FUZZEC_ERROR_UNKNOWN;
             goto end;
         }
@@ -54,7 +61,12 @@ void fuzzec_mbedtls_process(fuzzec_input_t * input, fuzzec_output_t * output) {
         mbedtls_ecp_set_zero(&point2);
     }
     else {
-        if (mbedtls_ecp_mul(&group, &point2, &scalar2, &point1, NULL, NULL) != 0) {
+        r = (mbedtls_ecp_mul(&group, &point2, &scalar2, &point1, NULL, NULL));
+        if (r == MBEDTLS_ERR_ECP_INVALID_KEY) {
+            output->errorCode = FUZZEC_ERROR_UNSUPPORTED;
+            goto end;
+        }
+        else if (r != 0) {
             output->errorCode = FUZZEC_ERROR_UNKNOWN;
             goto end;
         }
