@@ -69,6 +69,9 @@ static void gcrypt_to_ecfuzzer(gcry_mpi_point_t pointZ, fuzzec_output_t * output
             return;
         }
         gcry_mpi_release(coordz);
+    } else if (gcry_mpi_get_nbits(coordx) == 0 && gcry_mpi_get_nbits(coordy) == 0) {
+        output->pointSizes[index] = 1;
+        output->points[index][0] = 0;
     } else {
         output->pointSizes[index] = 1 + 2 * byteLen;
         //uncompressed form
