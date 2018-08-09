@@ -50,6 +50,7 @@ static void gcrypt_to_ecfuzzer(gcry_mpi_point_t pointZ, fuzzec_output_t * output
     gcry_mpi_t coordy;
     gcry_mpi_t coordz;
     gpg_error_t err;
+    size_t i, realLen, lapse;
 
     coordx = gcry_mpi_new(0);
     coordy = gcry_mpi_new(0);
@@ -71,22 +72,42 @@ static void gcrypt_to_ecfuzzer(gcry_mpi_point_t pointZ, fuzzec_output_t * output
     } else {
         output->pointSizes[index] = 1 + 2 * byteLen;
         //uncompressed form
+        memset(output->points[index], 0,FUZZEC_MAXPOINTLEN);
         output->points[index][0] = 4;
 
-        err = gcry_mpi_print(GCRYMPI_FMT_USG, output->points[index]+1, byteLen, NULL, coordx);
+        err = gcry_mpi_print(GCRYMPI_FMT_USG, output->points[index]+1, byteLen, &realLen, coordx);
         if (err) {
             output->errorCode = FUZZEC_ERROR_UNKNOWN;
             gcry_mpi_release(coordx);
             gcry_mpi_release(coordy);
             return;
         }
-        err = gcry_mpi_print(GCRYMPI_FMT_USG, output->points[index]+1+byteLen, byteLen, NULL, coordy);
+        if (realLen < byteLen) {
+            lapse = byteLen - realLen;
+            for (i=byteLen; i>lapse; i--) {
+                output->points[index][i] = output->points[index][i-lapse];
+            }
+            for(i=0; i<lapse; i++) {
+                output->points[index][i+1]=0;
+            }
+        }
+        err = gcry_mpi_print(GCRYMPI_FMT_USG, output->points[index]+1+byteLen, byteLen, &realLen, coordy);
         if (err) {
             output->errorCode = FUZZEC_ERROR_UNKNOWN;
             gcry_mpi_release(coordx);
             gcry_mpi_release(coordy);
             return;
         }
+        if (realLen < byteLen) {
+            lapse = byteLen - realLen;
+            for (i=byteLen; i>lapse; i--) {
+                output->points[index][byteLen+i] = output->points[index][byteLen+i-lapse];
+            }
+            for(i=0; i<lapse; i++) {
+                output->points[index][1+byteLen+i]=0;
+            }
+        }
+
     }
     gcry_mpi_release(coordx);
     gcry_mpi_release(coordy);
