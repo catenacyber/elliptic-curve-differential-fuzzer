@@ -4,6 +4,7 @@
 
 #include "../fuzz_ec.h"
 #include <libec.h>
+#include <stdio.h>
 
 static ec_curve_type eccurvetypeFromTlsId(uint16_t tlsid) {
     switch (tlsid) {
@@ -101,7 +102,6 @@ void fuzzec_libecc_process_aux(fuzzec_input_t * input, fuzzec_output_t * output,
 #endif
     output->errorCode = FUZZEC_ERROR_NONE;
 
-end:
     prj_pt_uninit(&pointZ1);
     prj_pt_uninit(&pointZ2);
     nn_uninit(&scalar1);

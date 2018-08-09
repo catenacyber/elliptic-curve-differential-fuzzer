@@ -14,6 +14,8 @@ typedef struct _fuzzec_input_t {
     const uint8_t * bignum2;
     size_t bignum1Size;
     size_t bignum2Size;
+    //bit length of curve
+    size_t groupBitLen;
 } fuzzec_input_t;
 
 /* TODO? more operations
@@ -38,6 +40,7 @@ typedef struct _fuzzec_output_t {
 typedef struct _fuzzec_module_t {
     const char * name;
     void (*process) (fuzzec_input_t *, fuzzec_output_t *);
+    int (*init) (void);
 } fuzzec_module_t;
 
 #ifdef __cplusplus

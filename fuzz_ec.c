@@ -48,53 +48,76 @@ size_t bitlenFromTlsId(uint16_t tlsid) {
     return 0;
 }
 
-#define NBMODULES 4
+#define NBMODULES 5
 //TODO integrate more modules
 void fuzzec_mbedtls_process(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_libecc_process(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_libecc_montgomery_process(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_openssl_process(fuzzec_input_t * input, fuzzec_output_t * output);
+void fuzzec_gcrypt_process(fuzzec_input_t * input, fuzzec_output_t * output);
+int fuzzec_gcrypt_init();
 fuzzec_module_t modules[NBMODULES] = {
     {
         "mbedtls",
         fuzzec_mbedtls_process,
+        NULL,
     },
     {
         "libecc",
         fuzzec_libecc_process,
+        NULL,
     },
     {
         "libecc_montgomery",
         fuzzec_libecc_montgomery_process,
+        NULL,
     },
     {
         "openssl",
         fuzzec_openssl_process,
+        NULL,
+    },
+    {
+        "gcrypt",
+        fuzzec_gcrypt_process,
+        fuzzec_gcrypt_init,
     },
 };
+
+static int initialized = 0;
 
 int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
     fuzzec_input_t input;
     fuzzec_output_t output[NBMODULES];
-    size_t groupBitLen;
-    size_t i, j, k;
+    size_t i, k;
 
+    if (initialized == 0) {
+        for (i=0; i<NBMODULES; i++) {
+            if (modules[i].init) {
+                if (modules[i].init()) {
+                    printf("Failed init for module %s\n", modules[i].name);
+                    return 0;
+                }
+            }
+        }
+        initialized = 1;
+    }
     if (Size < 4) {
         //2 bytes for TLS group, 1 for each of two big integers
         return 0;
     }
     //splits Data in tlsid, big nuber 1, big number 2
     input.tls_id = (Data[0] << 8) | Data[1];
-    groupBitLen = bitlenFromTlsId(input.tls_id);
-    if (groupBitLen == 0) {
+    input.groupBitLen = bitlenFromTlsId(input.tls_id);
+    if (input.groupBitLen == 0) {
         //unsupported curve
         return 0;
     }
 
     Size -= 2;
     input.bignum1 = Data + 2;
-    if (Size > 2 * ((groupBitLen >> 3) + ((groupBitLen & 0x7) ? 1 : 0))) {
-        Size = 2 * ((groupBitLen >> 3) + ((groupBitLen & 0x7) ? 1 : 0));
+    if (Size > 2 * ((input.groupBitLen >> 3) + ((input.groupBitLen & 0x7) ? 1 : 0))) {
+        Size = 2 * ((input.groupBitLen >> 3) + ((input.groupBitLen & 0x7) ? 1 : 0));
     }
     input.bignum1Size = Size/2;
     input.bignum2 = input.bignum1 + input.bignum1Size;
