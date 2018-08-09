@@ -50,6 +50,7 @@ void fuzzec_openssl_process(fuzzec_input_t * input, fuzzec_output_t * output) {
     BIGNUM * scalar2 = NULL;
     EC_POINT * point1 = NULL;
     EC_POINT * point2 = NULL;
+    EC_POINT * point3 = NULL;
     uint8_t * buffer = NULL;
 
     //initialize
@@ -61,6 +62,7 @@ void fuzzec_openssl_process(fuzzec_input_t * input, fuzzec_output_t * output) {
     }
     point1 = EC_POINT_new(group);
     point2 = EC_POINT_new(group);
+    point3 = EC_POINT_new(group);
     scalar1 = BN_bin2bn(input->bignum1, input->bignum1Size, NULL);
     scalar2 = BN_bin2bn(input->bignum2, input->bignum2Size, NULL);
 
@@ -72,6 +74,11 @@ void fuzzec_openssl_process(fuzzec_input_t * input, fuzzec_output_t * output) {
     }
     //P2=scalar2*P1 (=scalar2*scalar1*G)
     if (EC_POINT_mul(group, point2, NULL, point1, scalar2, NULL) == 0){
+        output->errorCode = FUZZEC_ERROR_UNKNOWN;
+        goto end;
+    }
+    //P3=P1+P2
+    if (EC_POINT_add(group, point3, point1, point2, NULL) == 0){
         output->errorCode = FUZZEC_ERROR_UNKNOWN;
         goto end;
     }
@@ -91,6 +98,13 @@ void fuzzec_openssl_process(fuzzec_input_t * input, fuzzec_output_t * output) {
     }
     memcpy(output->points[1], buffer, output->pointSizes[1]);
     free(buffer);
+    output->pointSizes[2] = EC_POINT_point2buf(group, point3, POINT_CONVERSION_UNCOMPRESSED, &buffer, NULL);
+    if (output->pointSizes[2] == 0 ) {
+        output->errorCode = FUZZEC_ERROR_UNKNOWN;
+        goto end;
+    }
+    memcpy(output->points[2], buffer, output->pointSizes[2]);
+    free(buffer);
 
 #ifdef DEBUG
     printf("openssl:");
@@ -109,5 +123,6 @@ end:
     BN_clear_free(scalar2);
     EC_POINT_clear_free(point1);
     EC_POINT_clear_free(point2);
+    EC_POINT_clear_free(point3);
     return;
 }

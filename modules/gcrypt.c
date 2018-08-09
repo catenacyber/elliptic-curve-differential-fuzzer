@@ -100,6 +100,7 @@ void fuzzec_gcrypt_process(fuzzec_input_t * input, fuzzec_output_t * output) {
     gcry_mpi_point_t pointG = NULL;
     gcry_mpi_point_t point1 = NULL;
     gcry_mpi_point_t point2 = NULL;
+    gcry_mpi_point_t point3 = NULL;
 
     //initialize
     //TODO fuzz custom curves
@@ -132,16 +133,20 @@ void fuzzec_gcrypt_process(fuzzec_input_t * input, fuzzec_output_t * output) {
     }
     point1 = gcry_mpi_point_new(0);
     point2 = gcry_mpi_point_new(0);
+    point3 = gcry_mpi_point_new(0);
 
     //elliptic curve computations
     //P1=scalar1*G
     gcry_mpi_ec_mul(point1, scalar1, pointG, ctx);
     //P2=scalar2*P1 (=scalar2*scalar1*G)
     gcry_mpi_ec_mul(point2, scalar2, point1, ctx);
+    //P3=P1+P2
+    gcry_mpi_ec_add(point3,point1, point2, ctx);
 
     //format output
     gcrypt_to_ecfuzzer(point1, output, 0, BYTECEIL(input->groupBitLen), ctx);
     gcrypt_to_ecfuzzer(point2, output, 1, BYTECEIL(input->groupBitLen), ctx);
+    gcrypt_to_ecfuzzer(point3, output, 2, BYTECEIL(input->groupBitLen), ctx);
 
 #ifdef DEBUG
     printf("gcrypt:");
@@ -160,6 +165,9 @@ end:
     }
     if (point2) {
         gcry_mpi_point_release(point2);
+    }
+    if (point3) {
+        gcry_mpi_point_release(point3);
     }
     if (pointG) {
         gcry_mpi_point_release(pointG);
