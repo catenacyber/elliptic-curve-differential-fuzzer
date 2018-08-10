@@ -31,6 +31,10 @@ static const char * eccurvetypeFromTlsId(uint16_t tlsid) {
     return "";
 }
 
+static void my_gcry_logger (void *dummy, int level, const char *format, va_list arg_ptr) {
+    return;
+}
+
 int fuzzec_gcrypt_init(){
     gpg_error_t err;
     err=gcry_control(GCRYCTL_DISABLE_SECMEM, 0);
@@ -42,6 +46,7 @@ int fuzzec_gcrypt_init(){
     err=gcry_control(GCRYCTL_INITIALIZATION_FINISHED, 0);
     if (err)
         return 1;
+    gcry_set_log_handler (my_gcry_logger, NULL);
     return 0;
 }
 
