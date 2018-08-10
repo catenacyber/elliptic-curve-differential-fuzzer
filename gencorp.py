@@ -25,7 +25,7 @@ for c in curves:
 
     #zero and identity
     f = open("corpus/"+c+"01", "wb")
-    f.write(bytes([0, tlsid, 0, 1]))
+    f.write(bytes([0, tlsid, 1, 0]))
     f.close()
 
     #double and triple
