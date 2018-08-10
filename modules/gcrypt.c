@@ -135,14 +135,12 @@ void fuzzec_gcrypt_process(fuzzec_input_t * input, fuzzec_output_t * output) {
     //TODO fuzz custom curves
     err = gcry_mpi_ec_new (&ctx, NULL, eccurvetypeFromTlsId(input->tls_id));
     if (err) {
-        printf("fail %d\n", input->tls_id);
         output->errorCode = FUZZEC_ERROR_UNSUPPORTED;
         return;
     }
 
     err = gcry_mpi_scan(&scalar1, GCRYMPI_FMT_USG, input->bignum1, input->bignum1Size, NULL);
     if (err) {
-        printf("fail2 %x\n", err);
         gcry_ctx_release(ctx);
         output->errorCode = FUZZEC_ERROR_UNKNOWN;
         return;
