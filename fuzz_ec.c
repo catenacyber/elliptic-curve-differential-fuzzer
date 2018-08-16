@@ -48,7 +48,7 @@ size_t bitlenFromTlsId(uint16_t tlsid) {
     return 0;
 }
 
-#define NBMODULES 7
+#define NBMODULES 9
 //TODO integrate more modules
 void fuzzec_mbedtls_process(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_libecc_process(fuzzec_input_t * input, fuzzec_output_t * output);
@@ -58,6 +58,8 @@ void fuzzec_nettle_process(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_gcrypt_process(fuzzec_input_t * input, fuzzec_output_t * output);
 int fuzzec_gcrypt_init();
 void fuzzec_cryptopp_process(fuzzec_input_t * input, fuzzec_output_t * output);
+void fuzzec_botan_process(fuzzec_input_t * input, fuzzec_output_t * output);
+void fuzzec_botanblind_process(fuzzec_input_t * input, fuzzec_output_t * output);
 fuzzec_module_t modules[NBMODULES] = {
     {
         "mbedtls",
@@ -92,6 +94,16 @@ fuzzec_module_t modules[NBMODULES] = {
     {
         "cryptopp",
         fuzzec_cryptopp_process,
+        NULL,
+    },
+    {
+        "botan",
+        fuzzec_botan_process,
+        NULL,
+    },
+    {
+        "botanblind",
+        fuzzec_botanblind_process,
         NULL,
     },
 };
@@ -148,6 +160,11 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
     printf("point=");
     for (i=0; i<2*input.coordSize+1; i++) {
         printf("%02x", input.coord[i]);
+    }
+    printf("\n");
+    printf("bignum=");
+    for (i=0; i<input.bignumSize; i++) {
+        printf("%02x", input.bignum[i]);
     }
     printf("\n");
 #endif
