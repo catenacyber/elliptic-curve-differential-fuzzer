@@ -48,12 +48,13 @@ size_t bitlenFromTlsId(uint16_t tlsid) {
     return 0;
 }
 
-#define NBMODULES 6
+#define NBMODULES 7
 //TODO integrate more modules
 void fuzzec_mbedtls_process(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_libecc_process(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_libecc_montgomery_process(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_openssl_process(fuzzec_input_t * input, fuzzec_output_t * output);
+void fuzzec_nettle_process(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_gcrypt_process(fuzzec_input_t * input, fuzzec_output_t * output);
 int fuzzec_gcrypt_init();
 void fuzzec_cryptopp_process(fuzzec_input_t * input, fuzzec_output_t * output);
@@ -76,6 +77,11 @@ fuzzec_module_t modules[NBMODULES] = {
     {
         "openssl",
         fuzzec_openssl_process,
+        NULL,
+    },
+    {
+        "nettle",
+        fuzzec_nettle_process,
         NULL,
     },
     {
@@ -138,6 +144,10 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
                     continue;
                 }
                 for (k=0; k<FUZZEC_NBPOINTS; k++) {
+                    if (output[i].pointSizes[k] == 0 ||
+                        output[i-1].pointSizes[k] == 0) {
+                        continue;
+                    }
                     if (output[i].pointSizes[k] != output[i-1].pointSizes[k]) {
                         printf("Module %s and %s returned different lengths for test %zu : %zu vs %zu\n", modules[i].name, modules[i-1].name, k, output[i].pointSizes[k], output[i-1].pointSizes[k]);
                         abort();
