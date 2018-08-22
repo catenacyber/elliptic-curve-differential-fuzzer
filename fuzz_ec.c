@@ -128,6 +128,10 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
     }
 
     Size -= 2;
+    if (Size < 1 + 2 * ECDF_BYTECEIL(input.groupBitLen)) {
+        //unused bytes
+        return 0;
+    }
     if (Size > 1 + 2 * ECDF_BYTECEIL(input.groupBitLen)) {
         Size = 1 + 2 * ECDF_BYTECEIL(input.groupBitLen);
     }
