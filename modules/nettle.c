@@ -11,15 +11,15 @@
 static const struct ecc_curve * tls1_group_id_lookup(uint16_t tlsid) {
     switch (tlsid) {
         case 19:
-            return nettle_get_secp_192r1();
+            return &nettle_secp_192r1;
         case 21:
-            return nettle_get_secp_224r1();
+            return &nettle_secp_224r1;
         case 23:
-            return nettle_get_secp_256r1();
+            return &nettle_secp_256r1;
         case 24:
-            return nettle_get_secp_384r1();
+            return &nettle_secp_384r1;
         case 25:
-            return nettle_get_secp_521r1();
+            return &nettle_secp_521r1;
     }
     return NULL;
 }
