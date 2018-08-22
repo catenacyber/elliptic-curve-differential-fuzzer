@@ -5,7 +5,6 @@
 #include "../fuzz_ec.h"
 #include <gcrypt.h>
 
-#define BYTECEIL(numbits) (((numbits) + 7) >> 3)
 
 static const char * eccurvetypeFromTlsId(uint16_t tlsid) {
     switch (tlsid) {
@@ -126,10 +125,9 @@ void fuzzec_gcrypt_process(fuzzec_input_t * input, fuzzec_output_t * output) {
     gcry_ctx_t ctx;
     gcry_mpi_t scalar1;
     gcry_mpi_t scalar2;
-    gcry_mpi_point_t pointG = NULL;
+    gcry_mpi_t scalarz;
     gcry_mpi_point_t point1 = NULL;
     gcry_mpi_point_t point2 = NULL;
-    gcry_mpi_point_t point3 = NULL;
 
     //initialize
     //TODO fuzz custom curves
@@ -139,41 +137,37 @@ void fuzzec_gcrypt_process(fuzzec_input_t * input, fuzzec_output_t * output) {
         return;
     }
 
-    err = gcry_mpi_scan(&scalar1, GCRYMPI_FMT_USG, input->bignum1, input->bignum1Size, NULL);
+    err = gcry_mpi_scan(&scalar1, GCRYMPI_FMT_USG, input->coordx, input->coordSize, NULL);
     if (err) {
         gcry_ctx_release(ctx);
         output->errorCode = FUZZEC_ERROR_UNKNOWN;
         return;
     }
-    err = gcry_mpi_scan(&scalar2, GCRYMPI_FMT_USG, input->bignum2, input->bignum2Size, NULL);
+    err = gcry_mpi_scan(&scalar2, GCRYMPI_FMT_USG, input->coordy, input->coordSize, NULL);
     if (err) {
         gcry_mpi_release(scalar1);
         gcry_ctx_release(ctx);
         output->errorCode = FUZZEC_ERROR_UNKNOWN;
         return;
     }
-
-    pointG = gcry_mpi_ec_get_point ("g", ctx, 1);
-    if (!pointG) {
+    point1 = gcry_mpi_point_new(0);
+    scalarz = gcry_mpi_set_ui (NULL, 1);
+    gcry_mpi_point_set(point1, scalar1, scalar2, scalarz);
+    gcry_mpi_release(scalarz);
+    point2 = gcry_mpi_point_new(0);
+    gcry_mpi_release(scalar1);
+    err = gcry_mpi_scan(&scalar1, GCRYMPI_FMT_USG, input->bignum, input->bignumSize, NULL);
+    if (err) {
         output->errorCode = FUZZEC_ERROR_UNKNOWN;
         goto end;
     }
-    point1 = gcry_mpi_point_new(0);
-    point2 = gcry_mpi_point_new(0);
-    point3 = gcry_mpi_point_new(0);
 
     //elliptic curve computations
-    //P1=scalar1*G
-    gcry_mpi_ec_mul(point1, scalar1, pointG, ctx);
-    //P2=scalar2*P1 (=scalar2*scalar1*G)
-    gcry_mpi_ec_mul(point2, scalar2, point1, ctx);
-    //P3=P1+P2
-    gcry_mpi_ec_add(point3,point1, point2, ctx);
+    //P2=scalar2*P1
+    gcry_mpi_ec_mul(point2, scalar1, point1, ctx);
 
     //format output
-    gcrypt_to_ecfuzzer(point1, output, 0, BYTECEIL(input->groupBitLen), ctx);
-    gcrypt_to_ecfuzzer(point2, output, 1, BYTECEIL(input->groupBitLen), ctx);
-    gcrypt_to_ecfuzzer(point3, output, 2, BYTECEIL(input->groupBitLen), ctx);
+    gcrypt_to_ecfuzzer(point2, output, 0, ECDF_BYTECEIL(input->groupBitLen), ctx);
 
 #ifdef DEBUG
     printf("gcrypt:");
@@ -192,12 +186,6 @@ end:
     }
     if (point2) {
         gcry_mpi_point_release(point2);
-    }
-    if (point3) {
-        gcry_mpi_point_release(point3);
-    }
-    if (pointG) {
-        gcry_mpi_point_release(pointG);
     }
     gcry_mpi_release(scalar2);
     gcry_mpi_release(scalar1);

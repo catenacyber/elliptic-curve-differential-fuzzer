@@ -8,12 +8,18 @@
 extern "C" {
 #endif
 
+#define ECDF_BYTECEIL(numbits) (((numbits) + 7) >> 3)
+#define FUZZEC_NBPOINTS 1
+#define FUZZEC_MAXPOINTLEN 0x1000
+
 typedef struct _fuzzec_input_t {
     uint16_t tls_id;
-    const uint8_t * bignum1;
-    const uint8_t * bignum2;
-    size_t bignum1Size;
-    size_t bignum2Size;
+    const uint8_t coord[FUZZEC_MAXPOINTLEN];
+    const uint8_t * coordx;
+    const uint8_t * coordy;
+    const uint8_t * bignum;
+    size_t coordSize;
+    size_t bignumSize;
     //bit length of curve
     size_t groupBitLen;
 } fuzzec_input_t;
@@ -21,8 +27,6 @@ typedef struct _fuzzec_input_t {
 /* TODO? more operations
     k2*G and (k2*G)+(k1*G) ?
  */
-#define FUZZEC_NBPOINTS 3
-#define FUZZEC_MAXPOINTLEN 0x1000
 
 typedef enum
 {

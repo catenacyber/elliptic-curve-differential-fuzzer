@@ -95,6 +95,7 @@ fuzzec_module_t modules[NBMODULES] = {
         NULL,
     },
 };
+int decompressPoint(const uint8_t *Data, size_t Size, uint8_t *decom, uint16_t tls_id, size_t coordlen);
 
 static int initialized = 0;
 
@@ -114,11 +115,11 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
         }
         initialized = 1;
     }
-    if (Size < 4) {
-        //2 bytes for TLS group, 1 for each of two big integers
+    if (Size < 5) {
+        //2 bytes for TLS group, 2 for point, 1 for big integer
         return 0;
     }
-    //splits Data in tlsid, big nuber 1, big number 2
+    //splits Data in tlsid, point coordinates, big number
     input.tls_id = (Data[0] << 8) | Data[1];
     input.groupBitLen = bitlenFromTlsId(input.tls_id);
     if (input.groupBitLen == 0) {
@@ -127,13 +128,25 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
     }
 
     Size -= 2;
-    input.bignum1 = Data + 2;
-    if (Size > 2 * ((input.groupBitLen >> 3) + ((input.groupBitLen & 0x7) ? 1 : 0))) {
-        Size = 2 * ((input.groupBitLen >> 3) + ((input.groupBitLen & 0x7) ? 1 : 0));
+    if (Size > 1 + 2 * ECDF_BYTECEIL(input.groupBitLen)) {
+        Size = 1 + 2 * ECDF_BYTECEIL(input.groupBitLen);
     }
-    input.bignum1Size = Size/2;
-    input.bignum2 = input.bignum1 + input.bignum1Size;
-    input.bignum2Size = Size - input.bignum1Size;
+    input.bignumSize = Size/2;
+    input.bignum = Data + 2;
+    input.coordSize = ECDF_BYTECEIL(input.groupBitLen);
+    if (decompressPoint(input.bignum+input.bignumSize, Size-input.bignumSize, (uint8_t *)input.coord, input.tls_id, ECDF_BYTECEIL(input.groupBitLen)) != 0) {
+        //point not on curve
+        return 0;
+    }
+    input.coordx = input.coord + 1;
+    input.coordy = input.coord + 1 + input.coordSize;
+#ifdef DEBUG
+    printf("point=");
+    for (i=0; i<2*input.coordSize+1; i++) {
+        printf("%02x", input.coord[i]);
+    }
+    printf("\n");
+#endif
 
     //iterate modules
     for (i=0; i<NBMODULES; i++) {
@@ -150,11 +163,15 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
                     }
                     if (output[i].pointSizes[k] != output[i-1].pointSizes[k]) {
                         printf("Module %s and %s returned different lengths for test %zu : %zu vs %zu\n", modules[i].name, modules[i-1].name, k, output[i].pointSizes[k], output[i-1].pointSizes[k]);
+#ifndef DEBUG
                         abort();
+#endif
                     }
                     if (memcmp(output[i].points[k], output[i-1].points[k], output[i].pointSizes[k]) != 0) {
                         printf("Module %s and %s returned different points for test %zu\n", modules[i].name, modules[i-1].name, k);
+#ifndef DEBUG
                         abort();
+#endif
                     }
                 }
             }

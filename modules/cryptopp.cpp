@@ -45,35 +45,21 @@ extern "C" void fuzzec_cryptopp_process(fuzzec_input_t * input, fuzzec_output_t 
     }
     CryptoPP::DL_GroupParameters_EC<CryptoPP::ECP> params(oid);
     CryptoPP::ECP ec = params.GetCurve();
-    CryptoPP::Integer scalar1(input->bignum1, input->bignum1Size);
-    CryptoPP::Integer scalar2(input->bignum2, input->bignum2Size);
+    CryptoPP::Integer coordx(input->coordx, input->coordSize);
+    CryptoPP::Integer coordy(input->coordy, input->coordSize);
+    CryptoPP::ECP::Point point1(coordx, coordy);
+    CryptoPP::Integer scalar1(input->bignum, input->bignumSize);
 
     //elliptic curve computations
-    //P1=scalar1*G
-    CryptoPP::ECP::Point point1(ec.Multiply(scalar1, params.GetSubgroupGenerator()));
-    //P2=scalar2*P1 (=scalar2*scalar1*G)
-    CryptoPP::ECP::Point point2(ec.Multiply(scalar2, point1));
-    //P3=P1+P2
-    CryptoPP::ECP::Point point3(ec.Add(point1, point2));
+    //P2=scalar2*P1
+    CryptoPP::ECP::Point point2(ec.Multiply(scalar1, point1));
 
     //format output
-    ec.EncodePoint(output->points[0], point1, false);
+    ec.EncodePoint(output->points[0], point2, false);
     if (output->points[0][0] == 0) {
         output->pointSizes[0] = 1;
     } else {
         output->pointSizes[0] = ec.EncodedPointSize();
-    }
-    ec.EncodePoint(output->points[1], point2, false);
-    if (output->points[1][0] == 0) {
-        output->pointSizes[1] = 1;
-    } else {
-        output->pointSizes[1] = ec.EncodedPointSize();
-    }
-    ec.EncodePoint(output->points[2], point3, false);
-    if (output->points[2][0] == 0) {
-        output->pointSizes[2] = 1;
-    } else {
-        output->pointSizes[2] = ec.EncodedPointSize();
     }
 
 #ifdef DEBUG

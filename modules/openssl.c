@@ -44,13 +44,52 @@ static int tls1_group_id_lookup(uint16_t tlsid) {
     return nid_list[tlsid - 1];
 }
 
+int decompressPoint(const uint8_t *Data, size_t Size, uint8_t *decom, uint16_t tls_id, size_t coordlen) {
+    int r;
+    EC_GROUP * group = NULL;
+    BIGNUM * coordx = NULL;
+    EC_POINT * point = NULL;
+    uint8_t * buffer = NULL;
+
+    group = EC_GROUP_new_by_curve_name(tls1_group_id_lookup(tls_id));
+    if (group == NULL) {
+        r = 1;
+        goto end;
+    }
+
+    point = EC_POINT_new(group);
+    coordx = BN_bin2bn(Data+1, Size-1, NULL);
+
+    if (EC_POINT_set_compressed_coordinates_GFp(group, point,  coordx, Data[0] & 1, NULL) == 0) {
+        r = 2;
+        goto end;
+    }
+    if (EC_POINT_is_on_curve(group, point, NULL) == 0) {
+        r = 3;
+        goto end;
+    }
+    r = EC_POINT_point2buf(group, point, POINT_CONVERSION_UNCOMPRESSED, &buffer, NULL);
+    if (r == 0) {
+        r = 4;
+        goto end;
+    }
+    memcpy(decom, buffer, r);
+    r = 0;
+    free(buffer);
+end:
+    EC_GROUP_clear_free(group);
+    BN_clear_free(coordx);
+    EC_POINT_clear_free(point);
+    return r;
+}
+
+
 void fuzzec_openssl_process(fuzzec_input_t * input, fuzzec_output_t * output) {
     EC_GROUP * group = NULL;
     BIGNUM * scalar1 = NULL;
     BIGNUM * scalar2 = NULL;
     EC_POINT * point1 = NULL;
     EC_POINT * point2 = NULL;
-    EC_POINT * point3 = NULL;
     uint8_t * buffer = NULL;
 
     //initialize
@@ -62,48 +101,30 @@ void fuzzec_openssl_process(fuzzec_input_t * input, fuzzec_output_t * output) {
     }
     point1 = EC_POINT_new(group);
     point2 = EC_POINT_new(group);
-    point3 = EC_POINT_new(group);
-    scalar1 = BN_bin2bn(input->bignum1, input->bignum1Size, NULL);
-    scalar2 = BN_bin2bn(input->bignum2, input->bignum2Size, NULL);
+    scalar1 = BN_bin2bn(input->coordx, input->coordSize, NULL);
+    scalar2 = BN_bin2bn(input->coordy, input->coordSize, NULL);
+
+    if (EC_POINT_set_affine_coordinates_GFp(group, point1, scalar1, scalar2, NULL) == 0) {
+        output->errorCode = FUZZEC_ERROR_UNKNOWN;
+        goto end;
+    }
+    BN_clear_free(scalar1);
+    scalar1 = BN_bin2bn(input->bignum, input->bignumSize, NULL);
 
     //elliptic curve computations
-    //P1=scalar1*G
-    if (EC_POINT_mul(group, point1, scalar1, NULL, NULL, NULL) == 0){
-        output->errorCode = FUZZEC_ERROR_UNKNOWN;
-        goto end;
-    }
-    //P2=scalar2*P1 (=scalar2*scalar1*G)
-    if (EC_POINT_mul(group, point2, NULL, point1, scalar2, NULL) == 0){
-        output->errorCode = FUZZEC_ERROR_UNKNOWN;
-        goto end;
-    }
-    //P3=P1+P2
-    if (EC_POINT_add(group, point3, point1, point2, NULL) == 0){
+    //P2=scalar1*P1
+    if (EC_POINT_mul(group, point2, NULL, point1, scalar1, NULL) == 0){
         output->errorCode = FUZZEC_ERROR_UNKNOWN;
         goto end;
     }
 
     //format output
-    output->pointSizes[0] = EC_POINT_point2buf(group, point1, POINT_CONVERSION_UNCOMPRESSED, &buffer, NULL);
+    output->pointSizes[0] = EC_POINT_point2buf(group, point2, POINT_CONVERSION_UNCOMPRESSED, &buffer, NULL);
     if (output->pointSizes[0] == 0 ) {
         output->errorCode = FUZZEC_ERROR_UNKNOWN;
         goto end;
     }
     memcpy(output->points[0], buffer, output->pointSizes[0]);
-    free(buffer);
-    output->pointSizes[1] = EC_POINT_point2buf(group, point2, POINT_CONVERSION_UNCOMPRESSED, &buffer, NULL);
-    if (output->pointSizes[1] == 0 ) {
-        output->errorCode = FUZZEC_ERROR_UNKNOWN;
-        goto end;
-    }
-    memcpy(output->points[1], buffer, output->pointSizes[1]);
-    free(buffer);
-    output->pointSizes[2] = EC_POINT_point2buf(group, point3, POINT_CONVERSION_UNCOMPRESSED, &buffer, NULL);
-    if (output->pointSizes[2] == 0 ) {
-        output->errorCode = FUZZEC_ERROR_UNKNOWN;
-        goto end;
-    }
-    memcpy(output->points[2], buffer, output->pointSizes[2]);
     free(buffer);
 
 #ifdef DEBUG
@@ -123,6 +144,5 @@ end:
     BN_clear_free(scalar2);
     EC_POINT_clear_free(point1);
     EC_POINT_clear_free(point2);
-    EC_POINT_clear_free(point3);
     return;
 }

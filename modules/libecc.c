@@ -53,10 +53,11 @@ void fuzzec_libecc_process_aux(fuzzec_input_t * input, fuzzec_output_t * output,
     const ec_str_params *the_curve_const_parameters;
     ec_params curve_params;
     nn scalar1;
-    nn scalar2;
+    fp coordx;
+    fp coordy;
+    fp coordz;
     prj_pt pointZ1;
     prj_pt pointZ2;
-    prj_pt pointZ3;
     size_t byteLen;
 
     //initialize
@@ -66,35 +67,29 @@ void fuzzec_libecc_process_aux(fuzzec_input_t * input, fuzzec_output_t * output,
         return;
     }
     import_params(&curve_params, the_curve_const_parameters);
-    prj_pt_init(&pointZ1, &(curve_params.ec_curve));
     prj_pt_init(&pointZ2, &(curve_params.ec_curve));
-    prj_pt_init(&pointZ3, &(curve_params.ec_curve));
-    nn_init_from_buf(&scalar1, input->bignum1, input->bignum1Size);
-    nn_init_from_buf(&scalar2, input->bignum2, input->bignum2Size);
+    fp_init_from_buf(&coordx, &(curve_params.ec_fp), input->coordx, input->coordSize);
+    fp_init_from_buf(&coordy, &(curve_params.ec_fp), input->coordy, input->coordSize);
+    fp_init(&coordz, &(curve_params.ec_fp));
+    fp_one(&coordz);
+    prj_pt_init_from_coords(&pointZ1, &(curve_params.ec_curve), &coordx, &coordy, &coordz);
+    fp_uninit(&coordx);
+    fp_uninit(&coordy);
+    fp_uninit(&coordz);
+    nn_init_from_buf(&scalar1, input->bignum, input->bignumSize);
 
     //elliptic curve computations
-    //P1=scalar1*G
+    //P2=scalar2*P1
     if (nn_iszero(&scalar1)) {
-        //multiplication by 0 is not allowed
-        prj_pt_zero(&pointZ1);
-    } else {
-        multiplyFunction(&pointZ1, &scalar1, &(curve_params.ec_gen));
-    }
-    //P2=scalar2*P1 (=scalar2*scalar1*G)
-    if (nn_iszero(&scalar2) || prj_pt_iszero(&pointZ1)) {
         //multiplication by 0 is not allowed
         prj_pt_zero(&pointZ2);
     } else {
-        multiplyFunction(&pointZ2, &scalar2, &pointZ1);
+        multiplyFunction(&pointZ2, &scalar1, &pointZ1);
     }
-    //P3=P1+P2
-    prj_pt_add(&pointZ3, &pointZ1, &pointZ2);
 
     //format output
-    byteLen = BYTECEIL(curve_params.ec_fp.p_bitlen);
-    libecc_to_ecfuzzer(&pointZ1, output, 0, byteLen);
-    libecc_to_ecfuzzer(&pointZ2, output, 1, byteLen);
-    libecc_to_ecfuzzer(&pointZ3, output, 2, byteLen);
+    byteLen = ECDF_BYTECEIL(curve_params.ec_fp.p_bitlen);
+    libecc_to_ecfuzzer(&pointZ2, output, 0, byteLen);
 
 #ifdef DEBUG
     printf("libecc:");
@@ -109,9 +104,7 @@ void fuzzec_libecc_process_aux(fuzzec_input_t * input, fuzzec_output_t * output,
 
     prj_pt_uninit(&pointZ1);
     prj_pt_uninit(&pointZ2);
-    prj_pt_uninit(&pointZ3);
     nn_uninit(&scalar1);
-    nn_uninit(&scalar2);
     return;
 }
 
