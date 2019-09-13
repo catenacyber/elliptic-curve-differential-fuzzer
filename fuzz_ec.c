@@ -114,7 +114,7 @@ static int initialized = 0;
 int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
     fuzzec_input_t input;
     fuzzec_output_t output[NBMODULES];
-    size_t i, k;
+    size_t i, k, lastok;
 
     if (initialized == 0) {
         for (i=0; i<NBMODULES; i++) {
@@ -170,32 +170,33 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 #endif
 
     //iterate modules
+    lastok=NBMODULES;
     for (i=0; i<NBMODULES; i++) {
         modules[i].process(&input, &output[i]);
         if (output[i].errorCode == FUZZEC_ERROR_NONE) {
-            if (i > 0) {
-                if (output[i-1].errorCode != FUZZEC_ERROR_NONE) {
+            if (lastok == NBMODULES) {
+                lastok = i;
+                continue;
+            }
+            for (k=0; k<FUZZEC_NBPOINTS; k++) {
+                if (output[i].pointSizes[k] == 0 ||
+                    output[lastok].pointSizes[k] == 0) {
                     continue;
                 }
-                for (k=0; k<FUZZEC_NBPOINTS; k++) {
-                    if (output[i].pointSizes[k] == 0 ||
-                        output[i-1].pointSizes[k] == 0) {
-                        continue;
-                    }
-                    if (output[i].pointSizes[k] != output[i-1].pointSizes[k]) {
-                        printf("Module %s and %s returned different lengths for test %zu : %zu vs %zu\n", modules[i].name, modules[i-1].name, k, output[i].pointSizes[k], output[i-1].pointSizes[k]);
+                if (output[i].pointSizes[k] != output[lastok].pointSizes[k]) {
+                    printf("Module %s and %s returned different lengths for test %zu : %zu vs %zu\n", modules[i].name, modules[lastok].name, k, output[i].pointSizes[k], output[lastok].pointSizes[k]);
 #ifndef DEBUG
-                        abort();
+                    abort();
 #endif
-                    }
-                    if (memcmp(output[i].points[k], output[i-1].points[k], output[i].pointSizes[k]) != 0) {
-                        printf("Module %s and %s returned different points for test %zu\n", modules[i].name, modules[i-1].name, k);
+                }
+                if (memcmp(output[i].points[k], output[lastok].points[k], output[i].pointSizes[k]) != 0) {
+                    printf("Module %s and %s returned different points for test %zu\n", modules[i].name, modules[lastok].name, k);
 #ifndef DEBUG
-                        abort();
+                    abort();
 #endif
-                    }
                 }
             }
+            lastok = i;
         } else if (output[i].errorCode != FUZZEC_ERROR_UNSUPPORTED) {
             printf("Module %s returned %d\n", modules[i].name, output[i].errorCode);
             abort();

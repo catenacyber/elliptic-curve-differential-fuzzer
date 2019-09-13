@@ -45,11 +45,12 @@ void fuzzec_nettle_process(fuzzec_input_t * input, fuzzec_output_t * output) {
     ecc_point_init(&point2, curve);
 
     if (ecc_point_set (&point1, scalar1, scalar2) == 0) {
-        output->errorCode = FUZZEC_ERROR_UNSUPPORTED;
+        output->errorCode = FUZZEC_ERROR_UNKNOWN;
         goto end;
     }
     nettle_mpz_set_str_256_u(scalar1, input->bignumSize, input->bignum);
     if (ecc_scalar_set (&ecscalar1, scalar1) == 0) {
+        // above field prime
         output->errorCode = FUZZEC_ERROR_UNSUPPORTED;
         goto end;
     }
