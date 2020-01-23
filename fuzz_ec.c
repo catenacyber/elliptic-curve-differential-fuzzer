@@ -139,6 +139,12 @@ static const char * nameOfCurve(uint16_t tlsid) {
     return "";
 }
 
+static void failTest(tlsid uint16_t, modNb size_t) {
+#ifndef DEBUG
+    abort();
+#endif
+}
+
 int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
     fuzzec_input_t input;
     fuzzec_output_t output[NBMODULES];
@@ -214,15 +220,11 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
                 }
                 if (output[i].pointSizes[k] != output[lastok].pointSizes[k]) {
                     printf("Module %s and %s returned different lengths for test %zu : %zu vs %zu\n", modules[i].name, modules[lastok].name, k, output[i].pointSizes[k], output[lastok].pointSizes[k]);
-#ifndef DEBUG
-                    abort();
-#endif
+                    failTest(input.tls_id, i);
                 }
                 if (memcmp(output[i].points[k], output[lastok].points[k], output[i].pointSizes[k]) != 0) {
                     printf("Module %s and %s returned different points for test %zu\n", modules[i].name, modules[lastok].name, k);
-#ifndef DEBUG
-                    abort();
-#endif
+                    failTest(input.tls_id, i);
                 }
             }
             lastok = i;
