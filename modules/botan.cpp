@@ -12,29 +12,29 @@
 static const Botan::OID eccurvetypeFromTlsId(uint16_t tlsid) {
     switch (tlsid) {
         case 18:
-            return Botan::OIDS::lookup("secp192k1");
+            return Botan::OIDS::str2oid_or_empty("secp192k1");
         case 19:
-            return Botan::OIDS::lookup("secp192r1");
+            return Botan::OIDS::str2oid_or_empty("secp192r1");
         case 20:
-            return Botan::OIDS::lookup("secp224k1");
+            return Botan::OIDS::str2oid_or_empty("secp224k1");
         case 21:
-            return Botan::OIDS::lookup("secp224r1");
+            return Botan::OIDS::str2oid_or_empty("secp224r1");
         case 22:
-            return Botan::OIDS::lookup("secp256k1");
+            return Botan::OIDS::str2oid_or_empty("secp256k1");
         case 23:
-            return Botan::OIDS::lookup("secp256r1");
+            return Botan::OIDS::str2oid_or_empty("secp256r1");
         case 24:
-            return Botan::OIDS::lookup("secp384r1");
+            return Botan::OIDS::str2oid_or_empty("secp384r1");
         case 25:
-            return Botan::OIDS::lookup("secp521r1");
+            return Botan::OIDS::str2oid_or_empty("secp521r1");
         case 26:
-            return Botan::OIDS::lookup("brainpool256r1");
+            return Botan::OIDS::str2oid_or_empty("brainpool256r1");
         case 27:
-            return Botan::OIDS::lookup("brainpool384r1");
+            return Botan::OIDS::str2oid_or_empty("brainpool384r1");
         case 28:
-            return Botan::OIDS::lookup("brainpool512r1");
+            return Botan::OIDS::str2oid_or_empty("brainpool512r1");
     }
-    return Botan::OIDS::lookup("");
+    return Botan::OIDS::str2oid_or_empty("");
 }
 
 static void botan_to_ecfuzzer(Botan::PointGFp pointZ, fuzzec_output_t * output, size_t index, size_t byteLen) {
