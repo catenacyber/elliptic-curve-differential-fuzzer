@@ -192,3 +192,10 @@ end:
     gcry_ctx_release(ctx);
     return;
 }
+
+void fuzzec_gcrypt_fail() {
+    printf("fail for gcrypt\n");
+#ifndef DEBUG
+    abort();
+#endif
+}

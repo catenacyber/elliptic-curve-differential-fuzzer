@@ -75,3 +75,10 @@ extern "C" void fuzzec_cryptopp_process(fuzzec_input_t * input, fuzzec_output_t 
 
     return;
 }
+
+extern "C" void fuzzec_cryptopp_fail() {
+    printf("fail for cryptopp\n");
+#ifndef DEBUG
+    abort();
+#endif
+}

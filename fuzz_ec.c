@@ -60,51 +60,69 @@ int fuzzec_gcrypt_init();
 void fuzzec_cryptopp_process(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_botan_process(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_botanblind_process(fuzzec_input_t * input, fuzzec_output_t * output);
+void fuzzec_mbedtls_fail();
+void fuzzec_libecc_fail();
+void fuzzec_libecc_montgomery_fail();
+void fuzzec_openssl_fail();
+void fuzzec_nettle_fail();
+void fuzzec_gcrypt_fail();
+void fuzzec_cryptopp_fail();
+void fuzzec_botan_fail();
+void fuzzec_botanblind_fail();
 fuzzec_module_t modules[NBMODULES] = {
     {
         "mbedtls",
         fuzzec_mbedtls_process,
         NULL,
+        fuzzec_mbedtls_fail,
     },
     {
         "libecc",
         fuzzec_libecc_process,
         NULL,
+        fuzzec_libecc_fail,
     },
     {
         "libecc_montgomery",
         fuzzec_libecc_montgomery_process,
         NULL,
+        fuzzec_libecc_montgomery_fail,
     },
     {
         "openssl",
         fuzzec_openssl_process,
         NULL,
+        fuzzec_openssl_fail,
     },
     {
         "nettle",
         fuzzec_nettle_process,
         NULL,
+        fuzzec_nettle_fail,
     },
     {
         "gcrypt",
         fuzzec_gcrypt_process,
         fuzzec_gcrypt_init,
+        fuzzec_gcrypt_fail,
     },
     {
         "cryptopp",
         fuzzec_cryptopp_process,
         NULL,
+        fuzzec_cryptopp_fail,
     },
     {
         "botan",
         fuzzec_botan_process,
         NULL,
+        fuzzec_botan_fail,
     },
     {
         "botanblind",
         fuzzec_botanblind_process,
         NULL,
+        fuzzec_botanblind_fail,
     },
 };
 int decompressPoint(const uint8_t *Data, size_t Size, uint8_t *decom, uint16_t tls_id, size_t coordlen);
@@ -139,10 +157,56 @@ static const char * nameOfCurve(uint16_t tlsid) {
     return "";
 }
 
-static void failTest(tlsid uint16_t, modNb size_t) {
-#ifndef DEBUG
-    abort();
-#endif
+static void failTest(uint16_t tlsid, size_t modNb) {
+    switch (tlsid) {
+        case 18:
+            printf("fail for secp192k1\n");
+            modules[modNb].fail();
+            break;
+        case 19:
+            printf("fail for secp192r1\n");
+            modules[modNb].fail();
+            break;
+        case 20:
+            printf("fail for secp224k1\n");
+            modules[modNb].fail();
+            break;
+        case 21:
+            printf("fail for secp224r1\n");
+            modules[modNb].fail();
+            break;
+        case 22:
+            printf("fail for secp256k1\n");
+            modules[modNb].fail();
+            break;
+        case 23:
+            printf("fail for secp256r1\n");
+            modules[modNb].fail();
+            break;
+        case 24:
+            printf("fail for secp384r1\n");
+            modules[modNb].fail();
+            break;
+        case 25:
+            printf("fail for secp521r1\n");
+            modules[modNb].fail();
+            break;
+        case 26:
+            printf("fail for brainpool256r1\n");
+            modules[modNb].fail();
+            break;
+        case 27:
+            printf("fail for brainpool384r1\n");
+            modules[modNb].fail();
+            break;
+        case 28:
+            printf("fail for brainpool512r1\n");
+            modules[modNb].fail();
+            break;
+        default:
+            printf("fail for unknown\n");
+            modules[modNb].fail();
+    }
 }
 
 int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {

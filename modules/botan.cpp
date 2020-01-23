@@ -117,3 +117,17 @@ extern "C" void fuzzec_botanblind_process(fuzzec_input_t * input, fuzzec_output_
 
     return;
 }
+
+extern "C" void fuzzec_botan_fail() {
+    printf("fail for botan\n");
+#ifndef DEBUG
+    abort();
+#endif
+}
+
+extern "C" void fuzzec_botanblind_fail() {
+    printf("fail for botan blind\n");
+#ifndef DEBUG
+    abort();
+#endif
+}

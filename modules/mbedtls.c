@@ -78,3 +78,10 @@ end:
     mbedtls_ecp_group_free(&group);
     return;
 }
+
+void fuzzec_mbedtls_fail() {
+    printf("fail for mbedtls\n");
+#ifndef DEBUG
+    abort();
+#endif
+}

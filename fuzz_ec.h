@@ -45,6 +45,7 @@ typedef struct _fuzzec_module_t {
     const char * name;
     void (*process) (fuzzec_input_t *, fuzzec_output_t *);
     int (*init) (void);
+    void (*fail) (void);
 } fuzzec_module_t;
 
 #ifdef __cplusplus
