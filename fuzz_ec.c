@@ -111,6 +111,34 @@ int decompressPoint(const uint8_t *Data, size_t Size, uint8_t *decom, uint16_t t
 
 static int initialized = 0;
 
+static const char * nameOfCurve(uint16_t tlsid) {
+    switch (tlsid) {
+        case 18:
+        return "secp192k1";
+        case 19:
+        return "secp192r1";
+        case 20:
+        return "secp224k1";
+        case 21:
+        return "secp224r1";
+        case 22:
+        return "secp256k1";
+        case 23:
+        return "secp256r1";
+        case 24:
+        return "secp384r1";
+        case 25:
+        return "secp521r1";
+        case 26:
+        return "brainpool256r1";
+        case 27:
+        return "brainpool384r1";
+        case 28:
+        return "brainpool512r1";
+    }
+    return "";
+}
+
 int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
     fuzzec_input_t input;
     fuzzec_output_t output[NBMODULES];
@@ -157,6 +185,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
     input.coordx = input.coord + 1;
     input.coordy = input.coord + 1 + input.coordSize;
 #ifdef DEBUG
+    printf("curve=%d %s\n", input.tls_id, nameOfCurve(input.tls_id));
     printf("point=");
     for (i=0; i<2*input.coordSize+1; i++) {
         printf("%02x", input.coord[i]);
