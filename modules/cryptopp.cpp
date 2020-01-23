@@ -77,6 +77,49 @@ extern "C" void fuzzec_cryptopp_process(fuzzec_input_t * input, fuzzec_output_t 
     return;
 }
 
+extern "C" void fuzzec_cryptopp_add(fuzzec_input_t * input, fuzzec_output_t * output) {
+
+    //initialize
+    const CryptoPP::OID oid = eccurvetypeFromTlsId(input->tls_id);
+    if (oid == NULL) {
+        output->errorCode = FUZZEC_ERROR_UNSUPPORTED;
+        return;
+    }
+    CryptoPP::DL_GroupParameters_EC<CryptoPP::ECP> params(oid);
+    CryptoPP::ECP ec = params.GetCurve();
+    CryptoPP::Integer coordx(input->coordx, input->coordSize);
+    CryptoPP::Integer coordy(input->coordy, input->coordSize);
+    CryptoPP::ECP::Point point1(coordx, coordy);
+    CryptoPP::Integer coord2x(input->coord2x, input->coordSize);
+    CryptoPP::Integer coord2y(input->coord2y, input->coordSize);
+    CryptoPP::ECP::Point point2(coord2x, coord2y);
+
+    //elliptic curve computations
+    //P3=P2+P1
+    CryptoPP::ECP::Point point3(ec.Add(point1, point2));
+
+    //format output
+    ec.EncodePoint(output->points[0], point3, false);
+    if (output->points[0][0] == 0) {
+        output->pointSizes[0] = 1;
+    } else {
+        output->pointSizes[0] = ec.EncodedPointSize();
+    }
+
+#ifdef DEBUG
+    printf("cryptopp:");
+    for (size_t j=0; j<FUZZEC_NBPOINTS; j++) {
+        for (size_t i=0; i<output->pointSizes[j]; i++) {
+            printf("%02x", output->points[j][i]);
+        }
+        printf("\n");
+    }
+#endif
+    output->errorCode = FUZZEC_ERROR_NONE;
+
+    return;
+}
+
 extern "C" void fuzzec_cryptopp_fail() {
     printf("fail for cryptopp\n");
 #ifndef DEBUG

@@ -194,6 +194,99 @@ end:
     return;
 }
 
+void fuzzec_gcrypt_add(fuzzec_input_t * input, fuzzec_output_t * output) {
+    gpg_error_t err;
+    gcry_ctx_t ctx;
+    gcry_mpi_t scalar1;
+    gcry_mpi_t scalar2;
+    gcry_mpi_t scalarz;
+    gcry_mpi_point_t point1 = NULL;
+    gcry_mpi_point_t point2 = NULL;
+    gcry_mpi_point_t point3 = NULL;
+
+    //initialize
+    //TODO fuzz custom curves
+    err = gcry_mpi_ec_new (&ctx, NULL, eccurvetypeFromTlsId(input->tls_id));
+    if (err) {
+        output->errorCode = FUZZEC_ERROR_UNSUPPORTED;
+        return;
+    }
+
+    err = gcry_mpi_scan(&scalar1, GCRYMPI_FMT_USG, input->coordx, input->coordSize, NULL);
+    if (err) {
+        gcry_ctx_release(ctx);
+        output->errorCode = FUZZEC_ERROR_UNKNOWN;
+        return;
+    }
+    err = gcry_mpi_scan(&scalar2, GCRYMPI_FMT_USG, input->coordy, input->coordSize, NULL);
+    if (err) {
+        gcry_mpi_release(scalar1);
+        gcry_ctx_release(ctx);
+        output->errorCode = FUZZEC_ERROR_UNKNOWN;
+        return;
+    }
+    point1 = gcry_mpi_point_new(0);
+    scalarz = gcry_mpi_set_ui (NULL, 1);
+    gcry_mpi_point_set(point1, scalar1, scalar2, scalarz);
+    gcry_mpi_release(scalarz);
+    gcry_mpi_release(scalar1);
+    gcry_mpi_release(scalar2);
+
+    err = gcry_mpi_scan(&scalar1, GCRYMPI_FMT_USG, input->coord2x, input->coordSize, NULL);
+    if (err) {
+        gcry_ctx_release(ctx);
+        gcry_mpi_point_release(point1);
+        output->errorCode = FUZZEC_ERROR_UNKNOWN;
+        return;
+    }
+    err = gcry_mpi_scan(&scalar2, GCRYMPI_FMT_USG, input->coord2y, input->coordSize, NULL);
+    if (err) {
+        gcry_mpi_release(scalar1);
+        gcry_ctx_release(ctx);
+        gcry_mpi_point_release(point1);
+        output->errorCode = FUZZEC_ERROR_UNKNOWN;
+        return;
+    }
+    point2 = gcry_mpi_point_new(0);
+    scalarz = gcry_mpi_set_ui (NULL, 1);
+    gcry_mpi_point_set(point2, scalar1, scalar2, scalarz);
+    gcry_mpi_release(scalarz);
+
+    point3 = gcry_mpi_point_new(0);
+
+    //elliptic curve computations
+    //P3=P2+P1
+    gcry_mpi_ec_add(point3, point2, point1, ctx);
+
+    //format output
+    gcrypt_to_ecfuzzer(point3, output, 0, ECDF_BYTECEIL(input->groupBitLen), ctx);
+
+#ifdef DEBUG
+    printf("gcrypt:");
+    for (size_t j=0; j<FUZZEC_NBPOINTS; j++) {
+        for (size_t i=0; i<output->pointSizes[j]; i++) {
+            printf("%02x", output->points[j][i]);
+        }
+        printf("\n");
+    }
+#endif
+    output->errorCode = FUZZEC_ERROR_NONE;
+
+    if (point1) {
+        gcry_mpi_point_release(point1);
+    }
+    if (point2) {
+        gcry_mpi_point_release(point2);
+    }
+    if (point3) {
+        gcry_mpi_point_release(point3);
+    }
+    gcry_mpi_release(scalar2);
+    gcry_mpi_release(scalar1);
+    gcry_ctx_release(ctx);
+    return;
+}
+
 void fuzzec_gcrypt_fail() {
     printf("fail for gcrypt\n");
 #ifndef DEBUG

@@ -45,7 +45,7 @@ static int tls1_group_id_lookup(uint16_t tlsid) {
     return nid_list[tlsid - 1];
 }
 
-int decompressPoint(const uint8_t *Data, size_t Size, uint8_t *decom, uint16_t tls_id, size_t coordlen) {
+int decompressPoint(const uint8_t *Data, int compBit, size_t Size, uint8_t *decom, uint16_t tls_id, size_t coordlen) {
     int r;
     EC_GROUP * group = NULL;
     BIGNUM * coordx = NULL;
@@ -61,7 +61,7 @@ int decompressPoint(const uint8_t *Data, size_t Size, uint8_t *decom, uint16_t t
     point = EC_POINT_new(group);
     coordx = BN_bin2bn(Data+1, Size-1, NULL);
 
-    if (EC_POINT_set_compressed_coordinates_GFp(group, point,  coordx, Data[0] & 1, NULL) == 0) {
+    if (EC_POINT_set_compressed_coordinates_GFp(group, point,  coordx, compBit, NULL) == 0) {
         r = 2;
         goto end;
     }
@@ -145,6 +145,78 @@ end:
     BN_clear_free(scalar2);
     EC_POINT_clear_free(point1);
     EC_POINT_clear_free(point2);
+    return;
+}
+
+
+void fuzzec_openssl_add(fuzzec_input_t * input, fuzzec_output_t * output) {
+    EC_GROUP * group = NULL;
+    BIGNUM * scalar1 = NULL;
+    BIGNUM * scalar2 = NULL;
+    EC_POINT * point1 = NULL;
+    EC_POINT * point2 = NULL;
+    EC_POINT * point3 = NULL;
+    uint8_t * buffer = NULL;
+
+    //initialize
+    group = EC_GROUP_new_by_curve_name(tls1_group_id_lookup(input->tls_id));
+    if (group == NULL) {
+        printf("fail %d\n", input->tls_id);
+        output->errorCode = FUZZEC_ERROR_UNSUPPORTED;
+        return;
+    }
+    point1 = EC_POINT_new(group);
+    point2 = EC_POINT_new(group);
+    point3 = EC_POINT_new(group);
+    scalar1 = BN_bin2bn(input->coordx, input->coordSize, NULL);
+    scalar2 = BN_bin2bn(input->coordy, input->coordSize, NULL);
+    if (EC_POINT_set_affine_coordinates_GFp(group, point1, scalar1, scalar2, NULL) == 0) {
+        output->errorCode = FUZZEC_ERROR_UNKNOWN;
+        goto end;
+    }
+    BN_clear_free(scalar1);
+    BN_clear_free(scalar2);
+    scalar1 = BN_bin2bn(input->coord2x, input->coordSize, NULL);
+    scalar2 = BN_bin2bn(input->coord2y, input->coordSize, NULL);
+    if (EC_POINT_set_affine_coordinates_GFp(group, point2, scalar1, scalar2, NULL) == 0) {
+        output->errorCode = FUZZEC_ERROR_UNKNOWN;
+        goto end;
+    }
+
+    //elliptic curve computations
+    //P3=P2+P1
+    if (EC_POINT_add(group, point3, point2, point1, NULL) == 0){
+        output->errorCode = FUZZEC_ERROR_UNKNOWN;
+        goto end;
+    }
+
+    //format output
+    output->pointSizes[0] = EC_POINT_point2buf(group, point3, POINT_CONVERSION_UNCOMPRESSED, &buffer, NULL);
+    if (output->pointSizes[0] == 0 ) {
+        output->errorCode = FUZZEC_ERROR_UNKNOWN;
+        goto end;
+    }
+    memcpy(output->points[0], buffer, output->pointSizes[0]);
+    free(buffer);
+
+#ifdef DEBUG
+    printf("openssl:");
+    for (size_t j=0; j<FUZZEC_NBPOINTS; j++) {
+        for (size_t i=0; i<output->pointSizes[j]; i++) {
+            printf("%02x", output->points[j][i]);
+        }
+        printf("\n");
+    }
+#endif
+    output->errorCode = FUZZEC_ERROR_NONE;
+
+end:
+    EC_GROUP_clear_free(group);
+    BN_clear_free(scalar1);
+    BN_clear_free(scalar2);
+    EC_POINT_clear_free(point1);
+    EC_POINT_clear_free(point2);
+    EC_POINT_clear_free(point3);
     return;
 }
 

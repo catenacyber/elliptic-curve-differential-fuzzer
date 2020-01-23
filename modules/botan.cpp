@@ -119,6 +119,40 @@ extern "C" void fuzzec_botanblind_process(fuzzec_input_t * input, fuzzec_output_
     return;
 }
 
+extern "C" void fuzzec_botan_add(fuzzec_input_t * input, fuzzec_output_t * output) {
+    const Botan::OID oid = eccurvetypeFromTlsId(input->tls_id);
+    if (oid.to_string().length() == 0) {
+        output->errorCode = FUZZEC_ERROR_UNSUPPORTED;
+        return;
+    }
+    Botan::EC_Group group(oid);
+    Botan::BigInt coordx(input->coordx, input->coordSize);
+    Botan::BigInt coordy(input->coordy, input->coordSize);
+    Botan::PointGFp point1 = group.point(coordx, coordy);
+    Botan::BigInt coord2x(input->coord2x, input->coordSize);
+    Botan::BigInt coord2y(input->coord2y, input->coordSize);
+    Botan::PointGFp point2 = group.point(coord2x, coord2y);
+
+    //elliptic curve computations
+    Botan::PointGFp point3 = point1 + point2;
+
+    //format output
+    botan_to_ecfuzzer(point3, output, 0, BYTECEIL(input->groupBitLen));
+
+#ifdef DEBUG
+    printf("botan:");
+    for (size_t j=0; j<FUZZEC_NBPOINTS; j++) {
+        for (size_t i=0; i<output->pointSizes[j]; i++) {
+            printf("%02x", output->points[j][i]);
+        }
+        printf("\n");
+    }
+#endif
+    output->errorCode = FUZZEC_ERROR_NONE;
+
+    return;
+}
+
 extern "C" void fuzzec_botan_fail() {
     printf("fail for botan\n");
 #ifndef DEBUG

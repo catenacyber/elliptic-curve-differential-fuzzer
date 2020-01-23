@@ -17,6 +17,9 @@ typedef struct _fuzzec_input_t {
     const uint8_t coord[FUZZEC_MAXPOINTLEN];
     const uint8_t * coordx;
     const uint8_t * coordy;
+    const uint8_t coord2[FUZZEC_MAXPOINTLEN];
+    const uint8_t * coord2x;
+    const uint8_t * coord2y;
     const uint8_t * bignum;
     size_t coordSize;
     size_t bignumSize;
@@ -44,6 +47,7 @@ typedef struct _fuzzec_output_t {
 typedef struct _fuzzec_module_t {
     const char * name;
     void (*process) (fuzzec_input_t *, fuzzec_output_t *);
+    void (*add2p) (fuzzec_input_t *, fuzzec_output_t *);
     int (*init) (void);
     void (*fail) (void);
 } fuzzec_module_t;

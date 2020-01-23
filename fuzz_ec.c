@@ -60,6 +60,12 @@ int fuzzec_gcrypt_init();
 void fuzzec_cryptopp_process(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_botan_process(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_botanblind_process(fuzzec_input_t * input, fuzzec_output_t * output);
+void fuzzec_mbedtls_add(fuzzec_input_t * input, fuzzec_output_t * output);
+void fuzzec_libecc_add(fuzzec_input_t * input, fuzzec_output_t * output);
+void fuzzec_openssl_add(fuzzec_input_t * input, fuzzec_output_t * output);
+void fuzzec_gcrypt_add(fuzzec_input_t * input, fuzzec_output_t * output);
+void fuzzec_cryptopp_add(fuzzec_input_t * input, fuzzec_output_t * output);
+void fuzzec_botan_add(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_mbedtls_fail();
 void fuzzec_libecc_fail();
 void fuzzec_libecc_montgomery_fail();
@@ -73,12 +79,14 @@ fuzzec_module_t modules[NBMODULES] = {
     {
         "mbedtls",
         fuzzec_mbedtls_process,
+        fuzzec_mbedtls_add,
         NULL,
         fuzzec_mbedtls_fail,
     },
     {
         "libecc",
         fuzzec_libecc_process,
+        fuzzec_libecc_add,
         NULL,
         fuzzec_libecc_fail,
     },
@@ -86,11 +94,13 @@ fuzzec_module_t modules[NBMODULES] = {
         "libecc_montgomery",
         fuzzec_libecc_montgomery_process,
         NULL,
+        NULL,
         fuzzec_libecc_montgomery_fail,
     },
     {
         "openssl",
         fuzzec_openssl_process,
+        fuzzec_openssl_add,
         NULL,
         fuzzec_openssl_fail,
     },
@@ -98,23 +108,27 @@ fuzzec_module_t modules[NBMODULES] = {
         "nettle",
         fuzzec_nettle_process,
         NULL,
+        NULL,
         fuzzec_nettle_fail,
     },
     {
         "gcrypt",
         fuzzec_gcrypt_process,
+        fuzzec_gcrypt_add,
         fuzzec_gcrypt_init,
         fuzzec_gcrypt_fail,
     },
     {
         "cryptopp",
         fuzzec_cryptopp_process,
+        fuzzec_cryptopp_add,
         NULL,
         fuzzec_cryptopp_fail,
     },
     {
         "botan",
         fuzzec_botan_process,
+        fuzzec_botan_add,
         NULL,
         fuzzec_botan_fail,
     },
@@ -122,10 +136,11 @@ fuzzec_module_t modules[NBMODULES] = {
         "botanblind",
         fuzzec_botanblind_process,
         NULL,
+        NULL,
         fuzzec_botanblind_fail,
     },
 };
-int decompressPoint(const uint8_t *Data, size_t Size, uint8_t *decom, uint16_t tls_id, size_t coordlen);
+int decompressPoint(const uint8_t *Data, int compBit, size_t Size, uint8_t *decom, uint16_t tls_id, size_t coordlen);
 
 static int initialized = 0;
 
@@ -245,10 +260,21 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
     if (Size > 1 + 2 * ECDF_BYTECEIL(input.groupBitLen)) {
         Size = 1 + 2 * ECDF_BYTECEIL(input.groupBitLen);
     }
+    input.coordSize = ECDF_BYTECEIL(input.groupBitLen);
     input.bignumSize = Size/2;
     input.bignum = Data + 2;
-    input.coordSize = ECDF_BYTECEIL(input.groupBitLen);
-    if (decompressPoint(input.bignum+input.bignumSize, Size-input.bignumSize, (uint8_t *)input.coord, input.tls_id, ECDF_BYTECEIL(input.groupBitLen)) != 0) {
+    if (Data[2+input.bignumSize] & 0x80) {
+        //adding 2 points
+        if (decompressPoint(Data + 2, (Data[2+input.bignumSize] & 0x2) ? 1 : 0, Size-input.bignumSize, (uint8_t *)input.coord2, input.tls_id, ECDF_BYTECEIL(input.groupBitLen)) != 0) {
+            //point not on curve
+            return 0;
+        }
+        input.coord2x = input.coord2 + 1;
+        input.coord2y = input.coord2 + 1 + input.coordSize;
+    } else {
+        //mulitplying a point by a scalar
+    }
+    if (decompressPoint(input.bignum+input.bignumSize, (Data[2+input.bignumSize] & 0x1) ? 1 : 0, Size-input.bignumSize, (uint8_t *)input.coord, input.tls_id, ECDF_BYTECEIL(input.groupBitLen)) != 0) {
         //point not on curve
         return 0;
     }
@@ -261,9 +287,16 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
         printf("%02x", input.coord[i]);
     }
     printf("\n");
-    printf("bignum=");
-    for (i=0; i<input.bignumSize; i++) {
-        printf("%02x", input.bignum[i]);
+    if (Data[2+input.bignumSize] & 0x80) {
+        printf("point2=");
+        for (i=0; i<2*input.coordSize+1; i++) {
+            printf("%02x", input.coord2[i]);
+        }
+    } else {
+        printf("bignum=");
+        for (i=0; i<input.bignumSize; i++) {
+            printf("%02x", input.bignum[i]);
+        }
     }
     printf("\n");
 #endif
@@ -271,7 +304,14 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
     //iterate modules
     lastok=NBMODULES;
     for (i=0; i<NBMODULES; i++) {
-        modules[i].process(&input, &output[i]);
+        if (Data[2+input.bignumSize] & 0x80) {
+            if (modules[i].add2p == NULL) {
+                continue;
+            }
+            modules[i].add2p(&input, &output[i]);
+        } else {
+            modules[i].process(&input, &output[i]);
+        }
         if (output[i].errorCode == FUZZEC_ERROR_NONE) {
             if (lastok == NBMODULES) {
                 lastok = i;
