@@ -6,6 +6,7 @@
 #include <botan/ecdsa.h>
 #include <botan/oids.h>
 #include <botan/chacha_rng.h>
+#include <stdlib.h>
 
 #define BYTECEIL(numbits) (((numbits) + 7) >> 3)
 
@@ -116,4 +117,18 @@ extern "C" void fuzzec_botanblind_process(fuzzec_input_t * input, fuzzec_output_
     output->errorCode = FUZZEC_ERROR_NONE;
 
     return;
+}
+
+extern "C" void fuzzec_botan_fail() {
+    printf("fail for botan\n");
+#ifndef DEBUG
+    abort();
+#endif
+}
+
+extern "C" void fuzzec_botanblind_fail() {
+    printf("fail for botan blind\n");
+#ifndef DEBUG
+    abort();
+#endif
 }

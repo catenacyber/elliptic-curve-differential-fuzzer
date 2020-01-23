@@ -6,6 +6,7 @@
 #include <cryptopp/eccrypto.h>
 #include <cryptopp/ecp.h>
 #include <cryptopp/oids.h>
+#include <stdlib.h>
 
 static const CryptoPP::OID eccurvetypeFromTlsId(uint16_t tlsid) {
     switch (tlsid) {
@@ -74,4 +75,11 @@ extern "C" void fuzzec_cryptopp_process(fuzzec_input_t * input, fuzzec_output_t 
     output->errorCode = FUZZEC_ERROR_NONE;
 
     return;
+}
+
+extern "C" void fuzzec_cryptopp_fail() {
+    printf("fail for cryptopp\n");
+#ifndef DEBUG
+    abort();
+#endif
 }

@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <nettle/ecc.h>
 #include <nettle/ecc-curve.h>
+#include <stdlib.h>
 
 static const struct ecc_curve * tls1_group_id_lookup(uint16_t tlsid) {
     switch (tlsid) {
@@ -86,4 +87,11 @@ end:
     ecc_point_clear(&point1);
     ecc_point_clear(&point2);
     return;
+}
+
+void fuzzec_nettle_fail() {
+    printf("fail for nettle\n");
+#ifndef DEBUG
+    abort();
+#endif
 }

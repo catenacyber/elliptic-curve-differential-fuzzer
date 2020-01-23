@@ -4,6 +4,7 @@
 
 #include "../fuzz_ec.h"
 #include <gcrypt.h>
+#include <stdlib.h>
 
 
 static const char * eccurvetypeFromTlsId(uint16_t tlsid) {
@@ -191,4 +192,11 @@ end:
     gcry_mpi_release(scalar1);
     gcry_ctx_release(ctx);
     return;
+}
+
+void fuzzec_gcrypt_fail() {
+    printf("fail for gcrypt\n");
+#ifndef DEBUG
+    abort();
+#endif
 }

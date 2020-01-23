@@ -5,6 +5,7 @@
 #include "../fuzz_ec.h"
 #include <libec.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 static ec_curve_type eccurvetypeFromTlsId(uint16_t tlsid) {
     switch (tlsid) {
@@ -114,4 +115,18 @@ void fuzzec_libecc_montgomery_process(fuzzec_input_t * input, fuzzec_output_t * 
 
 void fuzzec_libecc_process(fuzzec_input_t * input, fuzzec_output_t * output) {
     fuzzec_libecc_process_aux(input, output, prj_pt_mul);
+}
+
+void fuzzec_libecc_fail() {
+    printf("fail for libecc\n");
+#ifndef DEBUG
+    abort();
+#endif
+}
+
+void fuzzec_libecc_montgomery_fail() {
+    printf("fail for libecc montgomery\n");
+#ifndef DEBUG
+    abort();
+#endif
 }

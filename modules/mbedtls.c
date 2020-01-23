@@ -4,6 +4,7 @@
 
 #include "../fuzz_ec.h"
 #include <mbedtls/ecp.h>
+#include <stdlib.h>
 
 void fuzzec_mbedtls_process(fuzzec_input_t * input, fuzzec_output_t * output) {
     mbedtls_ecp_group group;
@@ -77,4 +78,11 @@ end:
     mbedtls_ecp_point_free(&point2);
     mbedtls_ecp_group_free(&group);
     return;
+}
+
+void fuzzec_mbedtls_fail() {
+    printf("fail for mbedtls\n");
+#ifndef DEBUG
+    abort();
+#endif
 }

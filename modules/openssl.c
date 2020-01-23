@@ -6,6 +6,7 @@
 #include <openssl/ec.h>
 #include <openssl/obj_mac.h>
 #include <string.h>
+#include <stdlib.h>
 
 static const int nid_list[28] = {
     NID_sect163k1, /* sect163k1 (1) */
@@ -145,4 +146,11 @@ end:
     EC_POINT_clear_free(point1);
     EC_POINT_clear_free(point2);
     return;
+}
+
+void fuzzec_openssl_fail() {
+    printf("fail for openssl\n");
+#ifndef DEBUG
+    abort();
+#endif
 }
