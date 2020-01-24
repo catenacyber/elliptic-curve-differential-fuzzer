@@ -172,55 +172,56 @@ static const char * nameOfCurve(uint16_t tlsid) {
     return "";
 }
 
+void secp192k1_fail(fuzzec_module_t *mod);
+void secp192r1_fail(fuzzec_module_t *mod);
+void secp224k1_fail(fuzzec_module_t *mod);
+void secp224r1_fail(fuzzec_module_t *mod);
+void secp256k1_fail(fuzzec_module_t *mod);
+void secp256r1_fail(fuzzec_module_t *mod);
+void secp384r1_fail(fuzzec_module_t *mod);
+void secp521r1_fail(fuzzec_module_t *mod);
+void brainpool256r1_fail(fuzzec_module_t *mod);
+void brainpool384r1_fail(fuzzec_module_t *mod);
+void brainpool521r1_fail(fuzzec_module_t *mod);
+void unknown_fail(fuzzec_module_t *mod);
+
 static void failTest(uint16_t tlsid, size_t modNb) {
     switch (tlsid) {
         case 18:
-            printf("fail for secp192k1\n");
-            modules[modNb].fail();
+            secp192k1_fail(&modules[modNb]);
             break;
         case 19:
-            printf("fail for secp192r1\n");
-            modules[modNb].fail();
+            secp192r1_fail(&modules[modNb]);
             break;
         case 20:
-            printf("fail for secp224k1\n");
-            modules[modNb].fail();
+            secp224k1_fail(&modules[modNb]);
             break;
         case 21:
-            printf("fail for secp224r1\n");
-            modules[modNb].fail();
+            secp224r1_fail(&modules[modNb]);
             break;
         case 22:
-            printf("fail for secp256k1\n");
-            modules[modNb].fail();
+            secp256k1_fail(&modules[modNb]);
             break;
         case 23:
-            printf("fail for secp256r1\n");
-            modules[modNb].fail();
+            secp256r1_fail(&modules[modNb]);
             break;
         case 24:
-            printf("fail for secp384r1\n");
-            modules[modNb].fail();
+            secp384r1_fail(&modules[modNb]);
             break;
         case 25:
-            printf("fail for secp521r1\n");
-            modules[modNb].fail();
+            secp521r1_fail(&modules[modNb]);
             break;
         case 26:
-            printf("fail for brainpool256r1\n");
-            modules[modNb].fail();
+            brainpool256r1_fail(&modules[modNb]);
             break;
         case 27:
-            printf("fail for brainpool384r1\n");
-            modules[modNb].fail();
+            brainpool384r1_fail(&modules[modNb]);
             break;
         case 28:
-            printf("fail for brainpool512r1\n");
-            modules[modNb].fail();
+            brainpool521r1_fail(&modules[modNb]);
             break;
         default:
-            printf("fail for unknown\n");
-            modules[modNb].fail();
+            unknown_fail(&modules[modNb]);
     }
 }
 

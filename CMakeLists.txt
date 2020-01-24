@@ -21,5 +21,5 @@ find_library(GCRYPT_LIB gcrypt)
 find_library(CRYPTOPP_LIB cryptopp)
 find_library(BOTAN_LIB botan-2)
 
-add_executable (ecfuzzer main.c fuzz_ec.c modules/mbedtls.c modules/libecc.c modules/openssl.c modules/nettle.c modules/gcrypt.c modules/cryptopp.cpp modules/botan.cpp)
+add_executable (ecfuzzer main.c fuzz_ec.c fail.c modules/mbedtls.c modules/libecc.c modules/openssl.c modules/nettle.c modules/gcrypt.c modules/cryptopp.cpp modules/botan.cpp)
 target_link_libraries (ecfuzzer "${MBEDCRYPTO_LIB}" "${LIBECC_LIB}" "${OPENSSL_LIB}" "${NETTLE0_LIB}" "${NETTLE1_LIB}" "${NETTLE2_LIB}" "${GCRYPT_LIB}" "${CRYPTOPP_LIB}" "${BOTAN_LIB}")
