@@ -175,18 +175,5 @@ void fuzzec_libecc_add(fuzzec_input_t * input, fuzzec_output_t * output) {
     prj_pt_uninit(&pointZ1);
     prj_pt_uninit(&pointZ2);
     prj_pt_uninit(&pointZ3);
-    return;}
-
-void fuzzec_libecc_fail() {
-    printf("fail for libecc\n");
-#ifndef DEBUG
-    abort();
-#endif
-}
-
-void fuzzec_libecc_montgomery_fail() {
-    printf("fail for libecc montgomery\n");
-#ifndef DEBUG
-    abort();
-#endif
+    return;
 }

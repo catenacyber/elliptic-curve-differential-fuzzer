@@ -286,10 +286,3 @@ void fuzzec_gcrypt_add(fuzzec_input_t * input, fuzzec_output_t * output) {
     gcry_ctx_release(ctx);
     return;
 }
-
-void fuzzec_gcrypt_fail() {
-    printf("fail for gcrypt\n");
-#ifndef DEBUG
-    abort();
-#endif
-}

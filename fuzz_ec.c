@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include "fuzz_ec.h"
 
 size_t bitlenFromTlsId(uint16_t tlsid) {
@@ -66,78 +67,60 @@ void fuzzec_openssl_add(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_gcrypt_add(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_cryptopp_add(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_botan_add(fuzzec_input_t * input, fuzzec_output_t * output);
-void fuzzec_mbedtls_fail();
-void fuzzec_libecc_fail();
-void fuzzec_libecc_montgomery_fail();
-void fuzzec_openssl_fail();
-void fuzzec_nettle_fail();
-void fuzzec_gcrypt_fail();
-void fuzzec_cryptopp_fail();
-void fuzzec_botan_fail();
-void fuzzec_botanblind_fail();
 fuzzec_module_t modules[NBMODULES] = {
     {
         "mbedtls",
         fuzzec_mbedtls_process,
         fuzzec_mbedtls_add,
         NULL,
-        fuzzec_mbedtls_fail,
     },
     {
         "libecc",
         fuzzec_libecc_process,
         fuzzec_libecc_add,
         NULL,
-        fuzzec_libecc_fail,
     },
     {
         "libecc_montgomery",
         fuzzec_libecc_montgomery_process,
         NULL,
         NULL,
-        fuzzec_libecc_montgomery_fail,
     },
     {
         "openssl",
         fuzzec_openssl_process,
         fuzzec_openssl_add,
         NULL,
-        fuzzec_openssl_fail,
     },
     {
         "nettle",
         fuzzec_nettle_process,
         NULL,
         NULL,
-        fuzzec_nettle_fail,
     },
     {
         "gcrypt",
         fuzzec_gcrypt_process,
         fuzzec_gcrypt_add,
         fuzzec_gcrypt_init,
-        fuzzec_gcrypt_fail,
     },
     {
         "cryptopp",
         fuzzec_cryptopp_process,
         fuzzec_cryptopp_add,
         NULL,
-        fuzzec_cryptopp_fail,
     },
     {
         "botan",
         fuzzec_botan_process,
         fuzzec_botan_add,
         NULL,
-        fuzzec_botan_fail,
     },
     {
         "botanblind",
         fuzzec_botanblind_process,
         NULL,
         NULL,
-        fuzzec_botanblind_fail,
     },
 };
 int decompressPoint(const uint8_t *Data, int compBit, size_t Size, uint8_t *decom, uint16_t tls_id, size_t coordlen);
@@ -172,57 +155,12 @@ static const char * nameOfCurve(uint16_t tlsid) {
     return "";
 }
 
-void secp192k1_fail(fuzzec_module_t *mod);
-void secp192r1_fail(fuzzec_module_t *mod);
-void secp224k1_fail(fuzzec_module_t *mod);
-void secp224r1_fail(fuzzec_module_t *mod);
-void secp256k1_fail(fuzzec_module_t *mod);
-void secp256r1_fail(fuzzec_module_t *mod);
-void secp384r1_fail(fuzzec_module_t *mod);
-void secp521r1_fail(fuzzec_module_t *mod);
-void brainpool256r1_fail(fuzzec_module_t *mod);
-void brainpool384r1_fail(fuzzec_module_t *mod);
-void brainpool521r1_fail(fuzzec_module_t *mod);
-void unknown_fail(fuzzec_module_t *mod);
-
+#define MAX_FAIL_MSG_SIZE 256
 static void failTest(uint16_t tlsid, size_t modNb) {
-    switch (tlsid) {
-        case 18:
-            secp192k1_fail(&modules[modNb]);
-            break;
-        case 19:
-            secp192r1_fail(&modules[modNb]);
-            break;
-        case 20:
-            secp224k1_fail(&modules[modNb]);
-            break;
-        case 21:
-            secp224r1_fail(&modules[modNb]);
-            break;
-        case 22:
-            secp256k1_fail(&modules[modNb]);
-            break;
-        case 23:
-            secp256r1_fail(&modules[modNb]);
-            break;
-        case 24:
-            secp384r1_fail(&modules[modNb]);
-            break;
-        case 25:
-            secp521r1_fail(&modules[modNb]);
-            break;
-        case 26:
-            brainpool256r1_fail(&modules[modNb]);
-            break;
-        case 27:
-            brainpool384r1_fail(&modules[modNb]);
-            break;
-        case 28:
-            brainpool521r1_fail(&modules[modNb]);
-            break;
-        default:
-            unknown_fail(&modules[modNb]);
-    }
+    char * failmsg = malloc(MAX_FAIL_MSG_SIZE);
+    snprintf(failmsg, MAX_FAIL_MSG_SIZE-1, "%s:%s", modules[modNb].name, nameOfCurve(tlsid));
+    assert(failmsg);
+    free(failmsg);
 }
 
 int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {

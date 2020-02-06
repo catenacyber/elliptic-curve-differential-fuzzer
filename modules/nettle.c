@@ -88,10 +88,3 @@ end:
     ecc_point_clear(&point2);
     return;
 }
-
-void fuzzec_nettle_fail() {
-    printf("fail for nettle\n");
-#ifndef DEBUG
-    abort();
-#endif
-}

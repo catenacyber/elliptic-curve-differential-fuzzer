@@ -219,10 +219,3 @@ end:
     EC_POINT_clear_free(point3);
     return;
 }
-
-void fuzzec_openssl_fail() {
-    printf("fail for openssl\n");
-#ifndef DEBUG
-    abort();
-#endif
-}
