@@ -6,6 +6,8 @@
 #include <libec.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 static ec_curve_type eccurvetypeFromTlsId(uint16_t tlsid) {
     switch (tlsid) {
@@ -176,4 +178,32 @@ void fuzzec_libecc_add(fuzzec_input_t * input, fuzzec_output_t * output) {
     prj_pt_uninit(&pointZ2);
     prj_pt_uninit(&pointZ3);
     return;
+}
+
+static int fimport(unsigned char *buf, u16 buflen, const char *path)
+{
+    u16 rem = buflen, copied = 0;
+    ssize_t ret;
+    int fd;
+    fd = open(path, O_RDONLY);
+    if (fd == -1) {
+        printf("Unable to open input file %s\n", path);
+        return -1;
+    }
+    while (rem) {
+        ret = (int)read(fd, buf + copied, rem);
+        if (ret <= 0) {
+            break;
+        } else {
+            rem -= (u16)ret;
+            copied += (u16)ret;
+        }
+    }
+    close(fd);
+    return (copied == buflen) ? 0 : -1;
+}
+
+int get_random(unsigned char *buf, u16 len)
+{
+    return fimport(buf, len, "/dev/urandom");
 }
