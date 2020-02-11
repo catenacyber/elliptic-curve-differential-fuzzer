@@ -11,6 +11,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -DDEBUG")
 add_definitions(-DWITH_STDLIB)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
+set(FIND_LIBRARY_USE_LIB32_PATHS TRUE)
 find_library(MBEDCRYPTO_LIB mbedcrypto)
 find_library(LIBECC_LIB ec)
 find_library(OPENSSL_LIB crypto)
