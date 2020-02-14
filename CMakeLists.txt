@@ -27,7 +27,7 @@ find_library(BOTAN_LIB botan-2)
 include_directories(/usr/local/include/botan-2/)
 
 set(ecfuzzer_src fuzz_ec.c modules/mbedtls.c modules/libecc.c modules/openssl.c modules/nettle.c modules/gcrypt.c modules/cryptopp.cpp modules/botan.cpp)
-set(ecfuzzer_libs "${MBEDCRYPTO_LIB}" "${LIBECC_LIB}" "${OPENSSL_LIB}" "${NETTLE0_LIB}" "${NETTLE1_LIB}" "${NETTLE2_LIB}" "${GCRYPT_LIB}" "${GPGERROR_LIB}" "${CRYPTOPP_LIB}" "${BOTAN_LIB}")
+set(ecfuzzer_libs "${MBEDCRYPTO_LIB}" "${LIBECC_LIB}" "${OPENSSL_LIB}" "${NETTLE1_LIB}" "${NETTLE2_LIB}" "${NETTLE0_LIB}" "${GCRYPT_LIB}" "${GPGERROR_LIB}" "${CRYPTOPP_LIB}" "${BOTAN_LIB}")
 IF(DEFINED ENV{LIB_FUZZING_ENGINE})
 	set(ecfuzzer_libs ${ecfuzzer_libs} $ENV{LIB_FUZZING_ENGINE})
 else()
