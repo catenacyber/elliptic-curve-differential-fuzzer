@@ -159,7 +159,10 @@ static const char * nameOfCurve(uint16_t tlsid) {
 static void failTest(uint16_t tlsid, size_t modNb) {
     char * failmsg = malloc(MAX_FAIL_MSG_SIZE);
     snprintf(failmsg, MAX_FAIL_MSG_SIZE-1, "%s:%s", modules[modNb].name, nameOfCurve(tlsid));
-    assert(failmsg);
+    printf("Assertion failure: %s\n", failmsg);
+    fflush(stdout);
+    abort();
+    //assert(failmsg && strlen(failmsg) == 0);
     free(failmsg);
 }
 

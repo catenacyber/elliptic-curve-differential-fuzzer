@@ -4,20 +4,18 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <dirent.h>
+#include <unistd.h>
 
 int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size);
 
-int main(int argc, char** argv)
-{
+static int runFile(const char *name) {
     FILE * fp;
     uint8_t *Data;
     size_t Size;
 
-    if (argc != 2) {
-        return 1;
-    }
     //opens the file, get its size, and reads it into a buffer
-    fp = fopen(argv[1], "rb");
+    fp = fopen(name, "rb");
     if (fp == NULL) {
         return 2;
     }
@@ -47,6 +45,44 @@ int main(int argc, char** argv)
     //lauch fuzzer
     LLVMFuzzerTestOneInput(Data, Size);
     fclose(fp);
+    return 0;
+}
+
+int main(int argc, char** argv)
+{
+    DIR *d;
+    struct dirent *dir;
+    int r = 0;
+    int i;
+
+    if (argc != 2) {
+        return 1;
+    }
+
+    d = opendir(argv[1]);
+    if (d == NULL) {
+        //try as single file
+        return runFile(argv[1]);
+        return 0;
+    }
+    if (chdir(argv[1]) != 0) {
+        closedir(d);
+        printf("Invalid directory\n");
+        return 2;
+    }
+    while((dir = readdir(d)) != NULL) {
+        //opens the file, get its size, and reads it into a buffer
+        if (dir->d_type != DT_REG) {
+            continue;
+        }
+        //printf("Running file %s\n", dir->d_name);
+        if (runFile(dir->d_name) != 0) {
+            printf("Error while running file %s\n", dir->d_name);
+        }
+    }
+    closedir(d);
+    printf("Ok : whole directory finished\n");
+
     return 0;
 }
 
