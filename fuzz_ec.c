@@ -169,8 +169,9 @@ static void failTest(uint16_t tlsid, size_t modNb) {
     snprintf(failmsg, MAX_FAIL_MSG_SIZE-1, "%s:%s", modules[modNb].name, nameOfCurve(tlsid));
     printf("Assertion failure: %s\n", failmsg);
     fflush(stdout);
+#ifndef FUZZ_RECOVER
     abort();
-    //assert(failmsg && strlen(failmsg) == 0);
+#endif
     free(failmsg);
 }
 
@@ -267,6 +268,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
                 lastok = i;
                 continue;
             }
+            int failed = 0;
             for (k=0; k<FUZZEC_NBPOINTS; k++) {
                 if (output[i].pointSizes[k] == 0 ||
                     output[lastok].pointSizes[k] == 0) {
@@ -279,7 +281,11 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
                 if (memcmp(output[i].points[k], output[lastok].points[k], output[i].pointSizes[k]) != 0) {
                     printf("Module %s and %s returned different points for test %zu\n", modules[i].name, modules[lastok].name, k);
                     failTest(input.tls_id, i);
+                    failed = 1;
                 }
+            }
+            if (failed) {
+                break;
             }
             lastok = i;
         } else if (output[i].errorCode != FUZZEC_ERROR_UNSUPPORTED) {
