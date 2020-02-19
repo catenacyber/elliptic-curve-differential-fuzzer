@@ -25,7 +25,7 @@ find_library(GPGERROR_LIB gpg-error)
 find_library(CRYPTOPP_LIB cryptopp)
 find_library(BOTAN_LIB botan-2)
 
-#include_directories(/usr/local/include/botan-2/)
+include_directories(/usr/local/include/botan-2/)
 
 add_custom_command(
     OUTPUT goelliptic.a
