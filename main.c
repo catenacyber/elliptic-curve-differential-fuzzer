@@ -75,7 +75,7 @@ int main(int argc, char** argv)
         if (dir->d_type != DT_REG) {
             continue;
         }
-        //printf("Running file %s\n", dir->d_name);
+        printf("Running file %s\n", dir->d_name);
         if (runFile(dir->d_name) != 0) {
             printf("Error while running file %s\n", dir->d_name);
         }

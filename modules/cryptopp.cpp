@@ -37,7 +37,10 @@ static const CryptoPP::OID eccurvetypeFromTlsId(uint16_t tlsid) {
 }
 
 extern "C" void fuzzec_cryptopp_process(fuzzec_input_t * input, fuzzec_output_t * output) {
-
+#ifdef FUZZ_CRYPTOPP_DISABLED
+    output->errorCode = FUZZEC_ERROR_UNSUPPORTED;
+    return;
+#endif
     //initialize
     const CryptoPP::OID oid = eccurvetypeFromTlsId(input->tls_id);
     if (oid == NULL) {
@@ -78,7 +81,10 @@ extern "C" void fuzzec_cryptopp_process(fuzzec_input_t * input, fuzzec_output_t 
 }
 
 extern "C" void fuzzec_cryptopp_add(fuzzec_input_t * input, fuzzec_output_t * output) {
-
+#ifdef FUZZ_CRYPTOPP_DISABLED
+    output->errorCode = FUZZEC_ERROR_UNSUPPORTED;
+    return;
+#endif
     //initialize
     const CryptoPP::OID oid = eccurvetypeFromTlsId(input->tls_id);
     if (oid == NULL) {

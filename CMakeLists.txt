@@ -1,5 +1,6 @@
 cmake_minimum_required (VERSION 2.8)
 
+#Golang
 project (ecfuzzer CXX C)
 set(ECFUZZER_MAJOR_VERSION 0)
 set(ECFUZZER_MINOR_VERSION 1)
@@ -24,10 +25,29 @@ find_library(GPGERROR_LIB gpg-error)
 find_library(CRYPTOPP_LIB cryptopp)
 find_library(BOTAN_LIB botan-2)
 
-include_directories(/usr/local/include/botan-2/)
+#include_directories(/usr/local/include/botan-2/)
 
-set(ecfuzzer_src fuzz_ec.c modules/mbedtls.c modules/libecc.c modules/openssl.c modules/nettle.c modules/gcrypt.c modules/cryptopp.cpp modules/botan.cpp)
-set(ecfuzzer_libs "${MBEDCRYPTO_LIB}" "${LIBECC_LIB}" "${OPENSSL_LIB}" "${NETTLE1_LIB}" "${NETTLE2_LIB}" "${NETTLE0_LIB}" "${GCRYPT_LIB}" "${GPGERROR_LIB}" "${CRYPTOPP_LIB}" "${BOTAN_LIB}")
+add_custom_command(
+    OUTPUT goelliptic.a
+    COMMAND go build -o goelliptic.a -buildmode=c-archive ${CMAKE_CURRENT_SOURCE_DIR}/modules/elliptic.go
+    COMMAND cp goelliptic.h ${CMAKE_CURRENT_SOURCE_DIR}/
+    DEPENDS modules/elliptic.go
+    COMMENT "Build c archive out of golang"
+)
+
+add_custom_target(goelliptic_target DEPENDS goelliptic.a)
+
+add_library(goelliptic STATIC IMPORTED GLOBAL)
+add_dependencies(goelliptic goelliptic_target)
+
+set_target_properties(goelliptic
+    PROPERTIES
+    IMPORTED_LOCATION goelliptic.a
+)
+
+
+set(ecfuzzer_src fuzz_ec.c modules/mbedtls.c modules/libecc.c modules/openssl.c modules/nettle.c modules/gcrypt.c modules/cryptopp.cpp modules/botan.cpp modules/golang.c)
+set(ecfuzzer_libs "${MBEDCRYPTO_LIB}" "${LIBECC_LIB}" "${OPENSSL_LIB}" "${NETTLE1_LIB}" "${NETTLE2_LIB}" "${NETTLE0_LIB}" "${GCRYPT_LIB}" "${GPGERROR_LIB}" "${CRYPTOPP_LIB}" "${BOTAN_LIB}" goelliptic)
 IF(DEFINED ENV{LIB_FUZZING_ENGINE})
 	set(ecfuzzer_libs ${ecfuzzer_libs} $ENV{LIB_FUZZING_ENGINE})
 else()
