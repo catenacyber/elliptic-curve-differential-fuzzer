@@ -49,7 +49,7 @@ size_t bitlenFromTlsId(uint16_t tlsid) {
     return 0;
 }
 
-#define NBMODULES 11
+#define NBMODULES 12
 //TODO integrate more modules
 void fuzzec_mbedtls_process(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_libecc_process(fuzzec_input_t * input, fuzzec_output_t * output);
@@ -64,6 +64,7 @@ void fuzzec_botanblind_process(fuzzec_input_t * input, fuzzec_output_t * output)
 void fuzzec_golang_process(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_js_process(fuzzec_input_t * input, fuzzec_output_t * output);
 int fuzzec_js_init();
+void fuzzec_rust_process(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_mbedtls_add(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_libecc_add(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_openssl_add(fuzzec_input_t * input, fuzzec_output_t * output);
@@ -139,6 +140,13 @@ fuzzec_module_t modules[NBMODULES] = {
         fuzzec_js_add,
         fuzzec_js_init,
     },
+    {
+        "rust",
+        fuzzec_rust_process,
+        NULL,
+        NULL,
+    },
+
 };
 int decompressPoint(const uint8_t *Data, int compBit, size_t Size, uint8_t *decom, uint16_t tls_id, size_t coordlen);
 

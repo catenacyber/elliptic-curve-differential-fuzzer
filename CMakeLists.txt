@@ -48,6 +48,24 @@ set_target_properties(goelliptic
 )
 
 add_custom_command(
+    OUTPUT libecc_diff_fuzzer_rs.a
+    COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR}/modules/rustlibsecp256k1 && cargo build
+    COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/modules/rustlibsecp256k1/target/debug/libecc_diff_fuzzer_rs.a .
+    DEPENDS modules/rustlibsecp256k1/src/lib.rs
+    COMMENT "Build c archive out of rust"
+)
+
+add_custom_target(rselliptic_target DEPENDS libecc_diff_fuzzer_rs.a)
+
+add_library(rselliptic STATIC IMPORTED GLOBAL)
+add_dependencies(rselliptic rselliptic_target)
+
+set_target_properties(rselliptic
+    PROPERTIES
+    IMPORTED_LOCATION libecc_diff_fuzzer_rs.a
+)
+
+add_custom_command(
     OUTPUT genjsinit.h
     COMMAND browserify ${CMAKE_CURRENT_SOURCE_DIR}/modules/ecinit.js --bare -o bundle.js
     COMMAND qjsc -c -N genjsinit -o genjsinit.h bundle.js
@@ -79,8 +97,8 @@ if(DISABLE_JS)
 endif()
 
 
-set(ecfuzzer_src fuzz_ec.c modules/mbedtls.c modules/libecc.c modules/openssl.c modules/nettle.c modules/gcrypt.c modules/cryptopp.cpp modules/botan.cpp modules/golang.c modules/script.c genjsinit.h genjsmult.h genjsadd.h)
-set(ecfuzzer_libs "${MBEDCRYPTO_LIB}" "${LIBECC_LIB}" "${OPENSSL_LIB}" "${NETTLE1_LIB}" "${NETTLE2_LIB}" "${NETTLE0_LIB}" "${GCRYPT_LIB}" "${GPGERROR_LIB}" "${CRYPTOPP_LIB}" "${BOTAN_LIB}" "${QUICKJS_LIB}" goelliptic)
+set(ecfuzzer_src fuzz_ec.c modules/mbedtls.c modules/libecc.c modules/openssl.c modules/nettle.c modules/gcrypt.c modules/cryptopp.cpp modules/botan.cpp modules/golang.c modules/rust.c modules/script.c genjsinit.h genjsmult.h genjsadd.h)
+set(ecfuzzer_libs "${MBEDCRYPTO_LIB}" "${LIBECC_LIB}" "${OPENSSL_LIB}" "${NETTLE1_LIB}" "${NETTLE2_LIB}" "${NETTLE0_LIB}" "${GCRYPT_LIB}" "${GPGERROR_LIB}" "${CRYPTOPP_LIB}" "${BOTAN_LIB}" "${QUICKJS_LIB}" goelliptic rselliptic)
 IF(DEFINED ENV{LIB_FUZZING_ENGINE})
 	set(ecfuzzer_libs ${ecfuzzer_libs} $ENV{LIB_FUZZING_ENGINE})
 else()
