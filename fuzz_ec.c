@@ -49,7 +49,7 @@ size_t bitlenFromTlsId(uint16_t tlsid) {
     return 0;
 }
 
-#define NBMODULES 10
+#define NBMODULES 11
 //TODO integrate more modules
 void fuzzec_mbedtls_process(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_libecc_process(fuzzec_input_t * input, fuzzec_output_t * output);
@@ -62,6 +62,7 @@ void fuzzec_cryptopp_process(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_botan_process(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_botanblind_process(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_golang_process(fuzzec_input_t * input, fuzzec_output_t * output);
+void fuzzec_js_process(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_mbedtls_add(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_libecc_add(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_openssl_add(fuzzec_input_t * input, fuzzec_output_t * output);
@@ -128,6 +129,12 @@ fuzzec_module_t modules[NBMODULES] = {
         "golang",
         fuzzec_golang_process,
         fuzzec_golang_add,
+        NULL,
+    },
+    {
+        "nodesjs/elliptic",
+        fuzzec_js_process,
+        NULL,
         NULL,
     },
 };

@@ -20,16 +20,18 @@ void fuzzec_golang_process(fuzzec_input_t * input, fuzzec_output_t * output) {
     } else {
         output->pointSizes[0] = 1 + 2 * clen;
     }
+    output->errorCode = r;
 #ifdef DEBUG
-    printf("golang:");
-    for (size_t j=0; j<FUZZEC_NBPOINTS; j++) {
-        for (size_t i=0; i<output->pointSizes[j]; i++) {
-            printf("%02x", output->points[j][i]);
+    if (output->errorCode == FUZZEC_ERROR_NONE) {
+        printf("golang:");
+        for (size_t j=0; j<FUZZEC_NBPOINTS; j++) {
+            for (size_t i=0; i<output->pointSizes[j]; i++) {
+                printf("%02x", output->points[j][i]);
+            }
+            printf("\n");
         }
-        printf("\n");
     }
 #endif
-    output->errorCode = r;
 }
 
 void fuzzec_golang_add(fuzzec_input_t * input, fuzzec_output_t * output) {
