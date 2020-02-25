@@ -71,6 +71,7 @@ void fuzzec_gcrypt_add(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_cryptopp_add(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_botan_add(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_golang_add(fuzzec_input_t * input, fuzzec_output_t * output);
+void fuzzec_js_add(fuzzec_input_t * input, fuzzec_output_t * output);
 fuzzec_module_t modules[NBMODULES] = {
     {
         "mbedtls",
@@ -135,7 +136,7 @@ fuzzec_module_t modules[NBMODULES] = {
     {
         "nodesjs/elliptic",
         fuzzec_js_process,
-        NULL,
+        fuzzec_js_add,
         fuzzec_js_init,
     },
 };

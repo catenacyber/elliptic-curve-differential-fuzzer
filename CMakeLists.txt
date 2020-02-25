@@ -27,6 +27,7 @@ find_library(BOTAN_LIB botan-2)
 find_library(QUICKJS_LIB quickjs)
 
 include_directories(/usr/local/include/botan-2/)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 add_custom_command(
     OUTPUT goelliptic.a
@@ -47,11 +48,25 @@ set_target_properties(goelliptic
 )
 
 add_custom_command(
-    OUTPUT genscript.c
-    COMMAND browserify ${CMAKE_CURRENT_SOURCE_DIR}/modules/elliptic.js --bare -o bundle.js
-    COMMAND qjsc -c -o genscript.c bundle.js
-    DEPENDS modules/elliptic.js
-    COMMENT "Build c out of javascript"
+    OUTPUT genjsinit.h
+    COMMAND browserify ${CMAKE_CURRENT_SOURCE_DIR}/modules/ecinit.js --bare -o bundle.js
+    COMMAND qjsc -c -N genjsinit -o genjsinit.h bundle.js
+    DEPENDS modules/ecinit.js
+    COMMENT "Build c init out of javascript"
+)
+
+add_custom_command(
+    OUTPUT genjsmult.h
+    COMMAND qjsc -c -N genjsmult -o genjsmult.h ${CMAKE_CURRENT_SOURCE_DIR}/modules/ecmult.js 
+    DEPENDS modules/ecmult.js
+    COMMENT "Build c mult out of javascript"
+)
+
+add_custom_command(
+    OUTPUT genjsadd.h
+    COMMAND qjsc -c -N genjsadd -o genjsadd.h ${CMAKE_CURRENT_SOURCE_DIR}/modules/ecadd.js 
+    DEPENDS modules/ecadd.js
+    COMMENT "Build c add out of javascript"
 )
 
 option(DISABLE_CRYPTOPP "disable cryptopp module" OFF)
@@ -59,7 +74,7 @@ if(DISABLE_CRYPTOPP)
 	add_definitions(-DFUZZ_CRYPTOPP_DISABLED)
 endif()
 
-set(ecfuzzer_src fuzz_ec.c modules/mbedtls.c modules/libecc.c modules/openssl.c modules/nettle.c modules/gcrypt.c modules/cryptopp.cpp modules/botan.cpp modules/golang.c modules/script.c genscript.c)
+set(ecfuzzer_src fuzz_ec.c modules/mbedtls.c modules/libecc.c modules/openssl.c modules/nettle.c modules/gcrypt.c modules/cryptopp.cpp modules/botan.cpp modules/golang.c modules/script.c genjsinit.h genjsmult.h genjsadd.h)
 set(ecfuzzer_libs "${MBEDCRYPTO_LIB}" "${LIBECC_LIB}" "${OPENSSL_LIB}" "${NETTLE1_LIB}" "${NETTLE2_LIB}" "${NETTLE0_LIB}" "${GCRYPT_LIB}" "${GPGERROR_LIB}" "${CRYPTOPP_LIB}" "${BOTAN_LIB}" "${QUICKJS_LIB}" goelliptic)
 IF(DEFINED ENV{LIB_FUZZING_ENGINE})
 	set(ecfuzzer_libs ${ecfuzzer_libs} $ENV{LIB_FUZZING_ENGINE})
@@ -69,3 +84,4 @@ endif()
 
 add_executable (ecfuzzer ${ecfuzzer_src})
 target_link_libraries (ecfuzzer ${ecfuzzer_libs})
+

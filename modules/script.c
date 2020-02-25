@@ -9,8 +9,9 @@
 #include <ctype.h>
 #include <string.h>
 
-const uint32_t qjsc_bundle_size;
-const uint8_t qjsc_bundle[144729];
+#include "genjsinit.h"
+#include "genjsmult.h"
+#include "genjsadd.h"
 
 static const char * nameOfCurve(uint16_t tlsid) {
     switch (tlsid) {
@@ -48,30 +49,18 @@ int fuzzec_js_init() {
     JS_AddIntrinsicTypedArrays(ctx);
     JS_AddIntrinsicPromise(ctx);
     JS_AddIntrinsicBigInt(ctx);
+    js_std_add_helpers(ctx, 0, NULL);
+    char cmd[2048];
+    //global js variables outside browserify
+    snprintf(cmd, 2048,"var EClib; var utils; var p192; var p224; var p256; var p384; var p521; var p256k;");
+    JS_Eval(ctx, cmd, strlen(cmd), "<none>", JS_EVAL_TYPE_GLOBAL);
+    js_std_eval_binary(ctx, genjsinit, genjsinit_size, 0);
+    js_std_loop(ctx);
     return 0;
 }
 
-void fuzzec_js_process(fuzzec_input_t * input, fuzzec_output_t * output) {
-    char cmd[2048];
-    const char *curve = nameOfCurve(input->tls_id);
-    if (curve == NULL) {
-        output->errorCode = FUZZEC_ERROR_UNSUPPORTED;
-        return;
-    }
-    int offset = snprintf(cmd, 2048, "var process = {};\nprocess.argv = ['node', 'elliptic.js', '%s', '", curve);
-    //dangerous overflow
-    for (size_t i=0; i<2*input->coordSize+1; i++) {
-        offset += snprintf(cmd+offset, 2048-offset, "%02x", input->coord[i]);
-    }
-    offset += snprintf(cmd+offset, 2048-offset, "', '");
-    for (size_t i=0; i<input->coordSize; i++) {
-        offset += snprintf(cmd+offset, 2048-offset, "%02x", input->bignum[i]);
-    }
-    offset += snprintf(cmd+offset, 2048-offset, "'];");
-
-    JS_Eval(ctx, cmd, strlen(cmd), "<none>", JS_EVAL_TYPE_GLOBAL);
-
-    js_std_eval_binary(ctx, qjsc_bundle, qjsc_bundle_size, 0);
+void fuzzec_js_aux(fuzzec_input_t * input, fuzzec_output_t * output, const uint8_t *bytecode, size_t bytecode_size) {
+    js_std_eval_binary(ctx, bytecode, bytecode_size, 0);
     js_std_loop(ctx);
 
     JSValue global = JS_GetGlobalObject(ctx);
@@ -104,6 +93,49 @@ void fuzzec_js_process(fuzzec_input_t * input, fuzzec_output_t * output) {
     }
 #endif
     output->errorCode = FUZZEC_ERROR_NONE;
+
 }
 
-//TODO void fuzzec_js_add(fuzzec_input_t * input, fuzzec_output_t * output) {
+void fuzzec_js_process(fuzzec_input_t * input, fuzzec_output_t * output) {
+    char cmd[2048];
+    const char *curve = nameOfCurve(input->tls_id);
+    if (curve == NULL) {
+        output->errorCode = FUZZEC_ERROR_UNSUPPORTED;
+        return;
+    }
+    int offset = snprintf(cmd, 2048, "ec = %s;\ninputPoint='", curve);
+    //dangerous overflow
+    for (size_t i=0; i<2*input->coordSize+1; i++) {
+        offset += snprintf(cmd+offset, 2048-offset, "%02x", input->coord[i]);
+    }
+    offset += snprintf(cmd+offset, 2048-offset, "';\ninputScalar='");
+    for (size_t i=0; i<input->coordSize; i++) {
+        offset += snprintf(cmd+offset, 2048-offset, "%02x", input->bignum[i]);
+    }
+    offset += snprintf(cmd+offset, 2048-offset, "';\n");
+
+    JS_Eval(ctx, cmd, strlen(cmd), "<none>", JS_EVAL_TYPE_GLOBAL);
+    fuzzec_js_aux(input, output, genjsmult, genjsmult_size);
+}
+
+void fuzzec_js_add(fuzzec_input_t * input, fuzzec_output_t * output) {
+    char cmd[2048];
+    const char *curve = nameOfCurve(input->tls_id);
+    if (curve == NULL) {
+        output->errorCode = FUZZEC_ERROR_UNSUPPORTED;
+        return;
+    }
+    int offset = snprintf(cmd, 2048, "ec = %s;\ninputPoint='", curve);
+    //dangerous overflow
+    for (size_t i=0; i<2*input->coordSize+1; i++) {
+        offset += snprintf(cmd+offset, 2048-offset, "%02x", input->coord[i]);
+    }
+    offset += snprintf(cmd+offset, 2048-offset, "';\ninputPoint2='");
+    for (size_t i=0; i<2*input->coordSize+1; i++) {
+        offset += snprintf(cmd+offset, 2048-offset, "%02x", input->coord2[i]);
+    }
+    offset += snprintf(cmd+offset, 2048-offset, "';\n");
+
+    JS_Eval(ctx, cmd, strlen(cmd), "<none>", JS_EVAL_TYPE_GLOBAL);
+    fuzzec_js_aux(input, output, genjsadd, genjsadd_size);
+}
