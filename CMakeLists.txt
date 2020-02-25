@@ -24,6 +24,7 @@ find_library(GCRYPT_LIB gcrypt)
 find_library(GPGERROR_LIB gpg-error)
 find_library(CRYPTOPP_LIB cryptopp)
 find_library(BOTAN_LIB botan-2)
+find_library(QUICKJS_LIB quickjs)
 
 include_directories(/usr/local/include/botan-2/)
 
@@ -45,13 +46,21 @@ set_target_properties(goelliptic
     IMPORTED_LOCATION goelliptic.a
 )
 
+add_custom_command(
+    OUTPUT genscript.c
+    COMMAND browserify ${CMAKE_CURRENT_SOURCE_DIR}/modules/elliptic.js --bare -o bundle.js
+    COMMAND qjsc -c -o genscript.c bundle.js
+    DEPENDS modules/elliptic.js
+    COMMENT "Build c out of javascript"
+)
+
 option(DISABLE_CRYPTOPP "disable cryptopp module" OFF)
 if(DISABLE_CRYPTOPP)
 	add_definitions(-DFUZZ_CRYPTOPP_DISABLED)
 endif()
 
-set(ecfuzzer_src fuzz_ec.c modules/mbedtls.c modules/libecc.c modules/openssl.c modules/nettle.c modules/gcrypt.c modules/cryptopp.cpp modules/botan.cpp modules/golang.c modules/script.c)
-set(ecfuzzer_libs "${MBEDCRYPTO_LIB}" "${LIBECC_LIB}" "${OPENSSL_LIB}" "${NETTLE1_LIB}" "${NETTLE2_LIB}" "${NETTLE0_LIB}" "${GCRYPT_LIB}" "${GPGERROR_LIB}" "${CRYPTOPP_LIB}" "${BOTAN_LIB}" goelliptic)
+set(ecfuzzer_src fuzz_ec.c modules/mbedtls.c modules/libecc.c modules/openssl.c modules/nettle.c modules/gcrypt.c modules/cryptopp.cpp modules/botan.cpp modules/golang.c modules/script.c genscript.c)
+set(ecfuzzer_libs "${MBEDCRYPTO_LIB}" "${LIBECC_LIB}" "${OPENSSL_LIB}" "${NETTLE1_LIB}" "${NETTLE2_LIB}" "${NETTLE0_LIB}" "${GCRYPT_LIB}" "${GPGERROR_LIB}" "${CRYPTOPP_LIB}" "${BOTAN_LIB}" "${QUICKJS_LIB}" goelliptic)
 IF(DEFINED ENV{LIB_FUZZING_ENGINE})
 	set(ecfuzzer_libs ${ecfuzzer_libs} $ENV{LIB_FUZZING_ENGINE})
 else()

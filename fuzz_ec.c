@@ -63,6 +63,7 @@ void fuzzec_botan_process(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_botanblind_process(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_golang_process(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_js_process(fuzzec_input_t * input, fuzzec_output_t * output);
+int fuzzec_js_init();
 void fuzzec_mbedtls_add(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_libecc_add(fuzzec_input_t * input, fuzzec_output_t * output);
 void fuzzec_openssl_add(fuzzec_input_t * input, fuzzec_output_t * output);
@@ -135,7 +136,7 @@ fuzzec_module_t modules[NBMODULES] = {
         "nodesjs/elliptic",
         fuzzec_js_process,
         NULL,
-        NULL,
+        fuzzec_js_init,
     },
 };
 int decompressPoint(const uint8_t *Data, int compBit, size_t Size, uint8_t *decom, uint16_t tls_id, size_t coordlen);
