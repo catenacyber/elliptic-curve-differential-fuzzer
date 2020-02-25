@@ -35,6 +35,9 @@ JSRuntime *rt;
 JSContext *ctx;
 
 int fuzzec_js_init() {
+#ifdef FUZZ_JS_DISABLED
+    return 0;
+#endif
     rt = JS_NewRuntime();
     ctx = JS_NewContextRaw(rt);
     JS_SetModuleLoaderFunc(rt, NULL, js_module_loader, NULL);
@@ -97,6 +100,11 @@ void fuzzec_js_aux(fuzzec_input_t * input, fuzzec_output_t * output, const uint8
 }
 
 void fuzzec_js_process(fuzzec_input_t * input, fuzzec_output_t * output) {
+#ifdef FUZZ_JS_DISABLED
+    output->errorCode = FUZZEC_ERROR_UNSUPPORTED;
+    return;
+#endif
+
     char cmd[2048];
     const char *curve = nameOfCurve(input->tls_id);
     if (curve == NULL) {
@@ -119,6 +127,11 @@ void fuzzec_js_process(fuzzec_input_t * input, fuzzec_output_t * output) {
 }
 
 void fuzzec_js_add(fuzzec_input_t * input, fuzzec_output_t * output) {
+#ifdef FUZZ_JS_DISABLED
+    output->errorCode = FUZZEC_ERROR_UNSUPPORTED;
+    return;
+#endif
+
     char cmd[2048];
     const char *curve = nameOfCurve(input->tls_id);
     if (curve == NULL) {
