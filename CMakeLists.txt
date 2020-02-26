@@ -50,7 +50,7 @@ set_target_properties(goelliptic
 add_custom_command(
     OUTPUT libecc_diff_fuzzer_rs.a
     COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR}/modules/rustlibsecp256k1 && cargo build
-    COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/modules/rustlibsecp256k1/target/debug/libecc_diff_fuzzer_rs.a .
+    COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/modules/rustlibsecp256k1/target/debug/libecc_diff_fuzzer_rs.a . || cp ${CMAKE_CURRENT_SOURCE_DIR}/modules/rustlibsecp256k1/target/$ENV{CARGO_BUILD_TARGET}/debug/libecc_diff_fuzzer_rs.a .
     DEPENDS modules/rustlibsecp256k1/src/lib.rs
     COMMENT "Build c archive out of rust"
 )
