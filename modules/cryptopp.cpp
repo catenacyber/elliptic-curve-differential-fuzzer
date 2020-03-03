@@ -66,15 +66,6 @@ extern "C" void fuzzec_cryptopp_process(fuzzec_input_t * input, fuzzec_output_t 
         output->pointSizes[0] = ec.EncodedPointSize();
     }
 
-#ifdef DEBUG
-    printf("cryptopp:");
-    for (size_t j=0; j<FUZZEC_NBPOINTS; j++) {
-        for (size_t i=0; i<output->pointSizes[j]; i++) {
-            printf("%02x", output->points[j][i]);
-        }
-        printf("\n");
-    }
-#endif
     output->errorCode = FUZZEC_ERROR_NONE;
 
     return;
@@ -112,15 +103,6 @@ extern "C" void fuzzec_cryptopp_add(fuzzec_input_t * input, fuzzec_output_t * ou
         output->pointSizes[0] = ec.EncodedPointSize();
     }
 
-#ifdef DEBUG
-    printf("cryptopp:");
-    for (size_t j=0; j<FUZZEC_NBPOINTS; j++) {
-        for (size_t i=0; i<output->pointSizes[j]; i++) {
-            printf("%02x", output->points[j][i]);
-        }
-        printf("\n");
-    }
-#endif
     output->errorCode = FUZZEC_ERROR_NONE;
 
     return;

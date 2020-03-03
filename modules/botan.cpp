@@ -70,15 +70,6 @@ extern "C" void fuzzec_botan_process(fuzzec_input_t * input, fuzzec_output_t * o
     //format output
     botan_to_ecfuzzer(point2, output, 0, BYTECEIL(input->groupBitLen));
 
-#ifdef DEBUG
-    printf("botan:");
-    for (size_t j=0; j<FUZZEC_NBPOINTS; j++) {
-        for (size_t i=0; i<output->pointSizes[j]; i++) {
-            printf("%02x", output->points[j][i]);
-        }
-        printf("\n");
-    }
-#endif
     output->errorCode = FUZZEC_ERROR_NONE;
 
     return;
@@ -105,15 +96,6 @@ extern "C" void fuzzec_botanblind_process(fuzzec_input_t * input, fuzzec_output_
     //format output
     botan_to_ecfuzzer(point2, output, 0, BYTECEIL(input->groupBitLen));
 
-#ifdef DEBUG
-    printf("botanblind:");
-    for (size_t j=0; j<FUZZEC_NBPOINTS; j++) {
-        for (size_t i=0; i<output->pointSizes[j]; i++) {
-            printf("%02x", output->points[j][i]);
-        }
-        printf("\n");
-    }
-#endif
     output->errorCode = FUZZEC_ERROR_NONE;
 
     return;
@@ -139,15 +121,6 @@ extern "C" void fuzzec_botan_add(fuzzec_input_t * input, fuzzec_output_t * outpu
     //format output
     botan_to_ecfuzzer(point3, output, 0, BYTECEIL(input->groupBitLen));
 
-#ifdef DEBUG
-    printf("botan:");
-    for (size_t j=0; j<FUZZEC_NBPOINTS; j++) {
-        for (size_t i=0; i<output->pointSizes[j]; i++) {
-            printf("%02x", output->points[j][i]);
-        }
-        printf("\n");
-    }
-#endif
     output->errorCode = FUZZEC_ERROR_NONE;
 
     return;

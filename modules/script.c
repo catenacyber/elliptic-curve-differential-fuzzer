@@ -86,15 +86,6 @@ void fuzzec_js_aux(fuzzec_input_t * input, fuzzec_output_t * output, const uint8
         output->points[0][i] = (result[2*i] >= 'A' ? ((result[2*i] & 0xdf) - 'A') + 10 : (result[2*i] - '0')) << 4;
         output->points[0][i] |= (result[2*i+1] >= 'A' ? ((result[2*i+1] & 0xdf) - 'A') + 10 : (result[2*i+1] - '0'));
     }
-#ifdef DEBUG
-    printf("nodejs/elliptic:");
-    for (size_t j=0; j<FUZZEC_NBPOINTS; j++) {
-        for (size_t i=0; i<output->pointSizes[j]; i++) {
-            printf("%02x", output->points[j][i]);
-        }
-        printf("\n");
-    }
-#endif
     output->errorCode = FUZZEC_ERROR_NONE;
 
 }

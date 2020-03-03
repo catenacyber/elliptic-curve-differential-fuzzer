@@ -22,17 +22,6 @@ void fuzzec_rust_process(fuzzec_input_t * input, fuzzec_output_t * output) {
     } else {
         output->pointSizes[0] = 2*clen+1;
     }
-#ifdef DEBUG
-    if (output->errorCode == FUZZEC_ERROR_NONE) {
-        printf("rust:");
-        for (size_t j=0; j<FUZZEC_NBPOINTS; j++) {
-            for (size_t i=0; i<output->pointSizes[j]; i++) {
-                printf("%02x", output->points[j][i]);
-            }
-            printf("\n");
-        }
-    }
-#endif
 }
 
 //TODO void fuzzec_rust_add(fuzzec_input_t * input, fuzzec_output_t * output) {

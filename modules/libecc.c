@@ -94,15 +94,6 @@ void fuzzec_libecc_process_aux(fuzzec_input_t * input, fuzzec_output_t * output,
     byteLen = ECDF_BYTECEIL(curve_params.ec_fp.p_bitlen);
     libecc_to_ecfuzzer(&pointZ2, output, 0, byteLen);
 
-#ifdef DEBUG
-    printf("libecc:");
-    for (size_t j=0; j<FUZZEC_NBPOINTS; j++) {
-        for (size_t i=0; i<output->pointSizes[j]; i++) {
-            printf("%02x", output->points[j][i]);
-        }
-        printf("\n");
-    }
-#endif
     output->errorCode = FUZZEC_ERROR_NONE;
 
     prj_pt_uninit(&pointZ1);
@@ -163,15 +154,6 @@ void fuzzec_libecc_add(fuzzec_input_t * input, fuzzec_output_t * output) {
     byteLen = ECDF_BYTECEIL(curve_params.ec_fp.p_bitlen);
     libecc_to_ecfuzzer(&pointZ3, output, 0, byteLen);
 
-#ifdef DEBUG
-    printf("libecc:");
-    for (size_t j=0; j<FUZZEC_NBPOINTS; j++) {
-        for (size_t i=0; i<output->pointSizes[j]; i++) {
-            printf("%02x", output->points[j][i]);
-        }
-        printf("\n");
-    }
-#endif
     output->errorCode = FUZZEC_ERROR_NONE;
 
     prj_pt_uninit(&pointZ1);

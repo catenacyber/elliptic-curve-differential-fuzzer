@@ -61,15 +61,6 @@ void fuzzec_mbedtls_process(fuzzec_input_t * input, fuzzec_output_t * output) {
         output->errorCode = FUZZEC_ERROR_UNKNOWN;
         goto end;
     }
-#ifdef DEBUG
-    printf("mbedlts:");
-    for (size_t j=0; j<FUZZEC_NBPOINTS; j++) {
-        for (size_t i=0; i<output->pointSizes[j]; i++) {
-            printf("%02x", output->points[j][i]);
-        }
-        printf("\n");
-    }
-#endif
     output->errorCode = FUZZEC_ERROR_NONE;
 
 end:
@@ -135,15 +126,6 @@ void fuzzec_mbedtls_add(fuzzec_input_t * input, fuzzec_output_t * output) {
         output->errorCode = FUZZEC_ERROR_UNKNOWN;
         goto end;
     }
-#ifdef DEBUG
-    printf("mbedlts:");
-    for (size_t j=0; j<FUZZEC_NBPOINTS; j++) {
-        for (size_t i=0; i<output->pointSizes[j]; i++) {
-            printf("%02x", output->points[j][i]);
-        }
-        printf("\n");
-    }
-#endif
     output->errorCode = FUZZEC_ERROR_NONE;
 
 end:

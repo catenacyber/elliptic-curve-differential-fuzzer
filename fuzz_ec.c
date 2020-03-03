@@ -280,6 +280,15 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
         } else {
             modules[i].process(&input, &output[i]);
         }
+#ifdef DEBUG
+        printf("%s: %x ", modules[i].name, output[i].errorCode);
+        if (output[i].errorCode == FUZZEC_ERROR_NONE) {
+            for (size_t i=0; i<output->pointSizes[0]; i++) {
+                printf("%02x", output->points[0][i]);
+            }
+        }
+        printf("\n");
+#endif
         if (output[i].errorCode == FUZZEC_ERROR_NONE) {
             if (lastok == NBMODULES) {
                 lastok = i;

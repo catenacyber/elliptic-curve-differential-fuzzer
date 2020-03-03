@@ -70,15 +70,6 @@ void fuzzec_nettle_process(fuzzec_input_t * input, fuzzec_output_t * output) {
     nettle_mpz_get_str_256(input->coordSize, output->points[0]+1+input->coordSize, scalar2);
     ecc_point_get(&point2, scalar1, scalar2);
 
-#ifdef DEBUG
-    printf("nettle:");
-    for (size_t j=0; j<FUZZEC_NBPOINTS; j++) {
-        for (size_t i=0; i<output->pointSizes[j]; i++) {
-            printf("%02x", output->points[j][i]);
-        }
-        printf("\n");
-    }
-#endif
     output->errorCode = FUZZEC_ERROR_NONE;
 
 end:

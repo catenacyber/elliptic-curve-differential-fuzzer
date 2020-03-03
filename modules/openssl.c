@@ -128,15 +128,6 @@ void fuzzec_openssl_process(fuzzec_input_t * input, fuzzec_output_t * output) {
     memcpy(output->points[0], buffer, output->pointSizes[0]);
     free(buffer);
 
-#ifdef DEBUG
-    printf("openssl:");
-    for (size_t j=0; j<FUZZEC_NBPOINTS; j++) {
-        for (size_t i=0; i<output->pointSizes[j]; i++) {
-            printf("%02x", output->points[j][i]);
-        }
-        printf("\n");
-    }
-#endif
     output->errorCode = FUZZEC_ERROR_NONE;
 
 end:
@@ -199,15 +190,6 @@ void fuzzec_openssl_add(fuzzec_input_t * input, fuzzec_output_t * output) {
     memcpy(output->points[0], buffer, output->pointSizes[0]);
     free(buffer);
 
-#ifdef DEBUG
-    printf("openssl:");
-    for (size_t j=0; j<FUZZEC_NBPOINTS; j++) {
-        for (size_t i=0; i<output->pointSizes[j]; i++) {
-            printf("%02x", output->points[j][i]);
-        }
-        printf("\n");
-    }
-#endif
     output->errorCode = FUZZEC_ERROR_NONE;
 
 end:
