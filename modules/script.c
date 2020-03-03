@@ -74,6 +74,7 @@ void fuzzec_js_aux(fuzzec_input_t * input, fuzzec_output_t * output, const uint8
     }
     size_t plen;
     const char * result = JS_ToCStringLen(ctx, &plen, val);
+    JS_FreeValue(ctx, val);
 
     // hexdecode
     output->pointSizes[0] = plen/2;
@@ -86,6 +87,7 @@ void fuzzec_js_aux(fuzzec_input_t * input, fuzzec_output_t * output, const uint8
         output->points[0][i] = (result[2*i] >= 'A' ? ((result[2*i] & 0xdf) - 'A') + 10 : (result[2*i] - '0')) << 4;
         output->points[0][i] |= (result[2*i+1] >= 'A' ? ((result[2*i+1] & 0xdf) - 'A') + 10 : (result[2*i+1] - '0'));
     }
+    JS_FreeCString(ctx, result);
     output->errorCode = FUZZEC_ERROR_NONE;
 
 }
