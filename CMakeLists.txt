@@ -23,7 +23,7 @@ find_library(NETTLE2_LIB libnettle.a nettle)
 find_library(GCRYPT_LIB gcrypt)
 find_library(GPGERROR_LIB gpg-error)
 find_library(CRYPTOPP_LIB cryptopp)
-find_library(BOTAN_LIB botan-2)
+find_library(BOTAN_LIB botan-3)
 find_library(QUICKJS_LIB quickjs)
 
 include_directories(/usr/local/include/botan-2/)
