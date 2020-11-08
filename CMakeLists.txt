@@ -26,7 +26,7 @@ find_library(CRYPTOPP_LIB cryptopp)
 find_library(BOTAN_LIB botan-3)
 find_library(QUICKJS_LIB quickjs)
 
-include_directories(/usr/local/include/botan-2/)
+include_directories(/usr/local/include/botan-3/)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 add_custom_command(
