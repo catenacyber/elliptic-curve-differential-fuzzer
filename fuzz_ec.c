@@ -283,8 +283,8 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 #ifdef DEBUG
         printf("%s: %x ", modules[i].name, output[i].errorCode);
         if (output[i].errorCode == FUZZEC_ERROR_NONE) {
-            for (size_t i=0; i<output->pointSizes[0]; i++) {
-                printf("%02x", output->points[0][i]);
+            for (size_t n=0; n<output[i].pointSizes[0]; n++) {
+                printf("%02x", output[i].points[0][n]);
             }
         }
         printf("\n");
@@ -305,7 +305,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
                     failTest(input.tls_id, i);
                 }
                 if (memcmp(output[i].points[k], output[lastok].points[k], output[i].pointSizes[k]) != 0) {
-                    printf("Module %s and %s returned different points for test %zu\n", modules[i].name, modules[lastok].name, k);
+                    printf("Module %s and %s returned different points for test %zu size %d\n", modules[i].name, modules[lastok].name, k, output[i].pointSizes[k]);
                     failTest(input.tls_id, i);
                     failed = 1;
                 }
