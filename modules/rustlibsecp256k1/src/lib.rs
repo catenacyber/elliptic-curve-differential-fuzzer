@@ -1,4 +1,5 @@
-use secp256k1::curve::*;
+use libsecp256k1::curve::*;
+use libsecp256k1::ECMULT_CONTEXT;
 
 #[no_mangle]
 pub extern "C" fn RustProcess(
