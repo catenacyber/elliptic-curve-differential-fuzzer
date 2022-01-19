@@ -45,7 +45,7 @@ void fuzzec_mbedtls_process(fuzzec_input_t * input, fuzzec_output_t * output) {
     }
     else {
         r = mbedtls_ecp_mul(&group, &point2, &scalar1, &point1, NULL, NULL);
-        if (r == MBEDTLS_ERR_ECP_INVALID_KEY) {
+        if (r == MBEDTLS_ERR_ECP_INVALID_KEY || r == MBEDTLS_ERR_ECP_BAD_INPUT_DATA) {
             //mbedtls enforces the scalar to be lesser than curve order
             output->errorCode = FUZZEC_ERROR_UNSUPPORTED;
             goto end;
@@ -111,7 +111,7 @@ void fuzzec_mbedtls_add(fuzzec_input_t * input, fuzzec_output_t * output) {
     //elliptic curve computations
     //P3=P2+P1
     r = mbedtls_ecp_muladd(&group, &point3, &scalar1, &point2, &scalar1, &point1);
-    if (r == MBEDTLS_ERR_ECP_INVALID_KEY) {
+    if (r == MBEDTLS_ERR_ECP_INVALID_KEY || r == MBEDTLS_ERR_ECP_BAD_INPUT_DATA) {
         //mbedtls enforces the scalar to be lesser than curve order
         output->errorCode = FUZZEC_ERROR_UNSUPPORTED;
         goto end;
