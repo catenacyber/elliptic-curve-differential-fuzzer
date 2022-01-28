@@ -35,7 +35,9 @@ static ec_curve_type eccurvetypeFromTlsId(uint16_t tlsid) {
 static void libecc_to_ecfuzzer(prj_pt *pointZ, fuzzec_output_t * output, size_t index, size_t byteLen) {
     aff_pt point;
 
-    if (prj_pt_iszero(pointZ)) {
+    int ret;
+    int iszero;
+    if (prj_pt_iszero(pointZ, &iszero) || iszero) {
         //null point is zero
         output->pointSizes[index] = 1;
         output->points[index][0] = 0;
@@ -53,7 +55,7 @@ static void libecc_to_ecfuzzer(prj_pt *pointZ, fuzzec_output_t * output, size_t 
 }
 
 void fuzzec_libecc_process_aux(fuzzec_input_t * input, fuzzec_output_t * output, void (*multiplyFunction)(prj_pt_t, nn_src_t, prj_pt_src_t)) {
-    const ec_str_params *the_curve_const_parameters;
+    const ec_str_params *the_curve_const_parameters = NULL;
     ec_params curve_params;
     nn scalar1;
     fp coordx;
@@ -62,10 +64,11 @@ void fuzzec_libecc_process_aux(fuzzec_input_t * input, fuzzec_output_t * output,
     prj_pt pointZ1;
     prj_pt pointZ2;
     size_t byteLen;
+    int ret, iszero;
 
     //initialize
-    the_curve_const_parameters = ec_get_curve_params_by_type(eccurvetypeFromTlsId(input->tls_id));
-    if (the_curve_const_parameters == NULL) {
+    ret = ec_get_curve_params_by_type(eccurvetypeFromTlsId(input->tls_id), &the_curve_const_parameters);
+    if (ret || the_curve_const_parameters == NULL) {
         output->errorCode = FUZZEC_ERROR_UNSUPPORTED;
         return;
     }
@@ -83,7 +86,8 @@ void fuzzec_libecc_process_aux(fuzzec_input_t * input, fuzzec_output_t * output,
 
     //elliptic curve computations
     //P2=scalar2*P1
-    if (nn_iszero(&scalar1)) {
+    ret = nn_iszero(&scalar1, &iszero);
+    if (ret || iszero) {
         //multiplication by 0 is not allowed
         prj_pt_zero(&pointZ2);
     } else {
@@ -102,16 +106,12 @@ void fuzzec_libecc_process_aux(fuzzec_input_t * input, fuzzec_output_t * output,
     return;
 }
 
-void fuzzec_libecc_montgomery_process(fuzzec_input_t * input, fuzzec_output_t * output) {
-    fuzzec_libecc_process_aux(input, output, prj_pt_mul_monty);
-}
-
 void fuzzec_libecc_process(fuzzec_input_t * input, fuzzec_output_t * output) {
     fuzzec_libecc_process_aux(input, output, prj_pt_mul);
 }
 
 void fuzzec_libecc_add(fuzzec_input_t * input, fuzzec_output_t * output) {
-    const ec_str_params *the_curve_const_parameters;
+    const ec_str_params *the_curve_const_parameters = NULL;
     ec_params curve_params;
     fp coordx;
     fp coordy;
@@ -122,8 +122,8 @@ void fuzzec_libecc_add(fuzzec_input_t * input, fuzzec_output_t * output) {
     size_t byteLen;
 
     //initialize
-    the_curve_const_parameters = ec_get_curve_params_by_type(eccurvetypeFromTlsId(input->tls_id));
-    if (the_curve_const_parameters == NULL) {
+    int ret = ec_get_curve_params_by_type(eccurvetypeFromTlsId(input->tls_id), &the_curve_const_parameters);
+    if (ret || the_curve_const_parameters == NULL) {
         output->errorCode = FUZZEC_ERROR_UNSUPPORTED;
         return;
     }
