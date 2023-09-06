@@ -3,7 +3,7 @@
 
 
 #include "../fuzz_ec.h"
-#include <libec.h>
+#include <libecc/libec.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
